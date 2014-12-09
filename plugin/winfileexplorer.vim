@@ -1575,8 +1575,28 @@ function! s:ListFileOfCurrentPath()
   endif
 endfunction
 
+function! s:SetCurrentPath()
+  if !IsWinManagerVisible()
+	  return
+  endif
+
+  if g:isStartWinManager == 1
+	  let g:isStartWinManager = 0
+	  return
+  endif
+  let cur_buf_name = expand("%:t")
+  if cur_buf_name == g:FileExplorer_title || cur_buf_name == g:TagList_title || cur_buf_name == '[Buf List]'
+    return
+  endif
+  if g:old_buf_name == cur_buf_name
+    return
+  endif
+  let g:cur_buf_path = expand("%:p:h")
+endfunction
+
 " Autocmd for updating file list of current folder
-autocmd BufEnter * call s:ListFileOfCurrentPath()
+"autocmd BufEnter * call s:ListFileOfCurrentPath()
+autocmd BufEnter * call s:SetCurrentPath()
 
 " restore 'cpo'
 let &cpo = s:cpo_save
