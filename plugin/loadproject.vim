@@ -23,7 +23,7 @@ let s:key_external_folders = "externalFolders"
 let s:key_external_includes = "externalIncludes"
 let s:key_external_tag_name = "externalTagName"
 let s:key_tag_import_mode = "tagImportMode"
-let s:key_tag_folders= "tagFolders"
+let s:key_tag_folders= "tagIncludeFolders"
 let s:key_tag_exclude_folders = "tagExcludeFolders"
 "let g:project_cfg[s:key_external_tag_name] = ".tags"
 let g:project_cfg = {}
@@ -38,8 +38,7 @@ let g:project_cfg[s:key_session_path] = "."
 let g:project_cfg[s:key_session_name] = "mysession"
 let g:project_cfg[s:key_project_cfg_folder] = ".vimproject"
 let g:project_cfg[s:key_external_tag_name] = ".tags"
-let g:project_cfg[s:key_tag_import_mode] = "all"
-let g:project_cfg[s:key_tag_folders] = "."
+let g:project_cfg[s:key_tag_import_mode] = "root"
 
 call add(g:tag_folders, "allfolders")
 function! s:stripspaces(input_string)
@@ -194,22 +193,22 @@ function! s:makeAllProjectTags(isForced)
   endif
  
   let tagImportMode =  g:project_cfg[s:key_tag_import_mode]
-  if tagImportMode != "all" && 
+  if tagImportMode != "root" && 
   \  tagImportMode != "include" && 
   \  tagImportMode != "exclude"
-     let tagImportMode = "all"
+     let tagImportMode = "root"
      let g:project_cfg[s:key_tag_import_mode] = tagImportMode
   endif
 
+  let tagPath = g:project_cfg[s:key_tag_path]
   let tagName = g:project_cfg[s:key_tag_name]
+  let tagPathNameAll = tagPath.'/'.tagName."_all"
 
-  if tagImportMode == "all" 
-      let tagPath = g:project_cfg[s:key_tag_path]
-      let tagPathNameAll = tagPath.'/'.tagName.'_all'
+  if tagImportMode == "root" 
       if (!filereadable(tagPathNameAll) || a:isForced)
         call s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root])
       endif
-      call add(retTagFiles, tagPath.'/'.tagName.'_all')
+      call add(retTagFiles, tagPathNameAll)
       call add(g:tag_folders, "root")
       return retTagFiles 
   endif
@@ -219,9 +218,11 @@ function! s:makeAllProjectTags(isForced)
     if has_key(g:project_cfg, s:key_tag_folders)
       if (stridx(g:project_cfg[s:key_tag_folders], ',') == -1)
         if g:project_cfg[s:key_tag_folders] == "."
-          call add(tagFolders, g:project_cfg[s:key_tag_folders])
+          call add(tagFolders, "root")
         else
-          call add(tagFolders, g:project_cfg[s:key_project_root])
+          if isdirectory(g:project_root[s:key_project_root].'/'.g:project_cfg[s:key_tag_folders])
+            call add(tagFolders, g:project_cfg[s:key_project_root])
+          endif
         endif
       else
         let tagFolders = split(g:project_cfg[s:key_tag_folders], ",")
@@ -230,6 +231,14 @@ function! s:makeAllProjectTags(isForced)
       let i = 0
       while i < len(tagFolders)
         let tagFolder = s:stripspaces(tagFolders[i])
+        if tagFolder == "root"
+          call remove(g:tag_folders, 0) 
+          call remove(retTagFiles, 0)
+          call add(g:tag_folders, "root")
+          call add(retTagFiles, tagPathNameAll)
+          return retTagFiles
+        endif
+        
         if isdirectory(g:project_cfg[s:key_project_root].'/'.tagFolder)
           let tagPath = g:project_cfg[s:key_tag_path]
           let subTagPathName = tagPath.'/'.tagName.'_'.tagFolder
@@ -585,11 +594,11 @@ endif
 
 if !exists(':ListEFolders') && has_key(g:project_cfg, s:key_external_folders)
   command -nargs=0 ListEFolders : call s:listExternalFolders()
-  nnoremap <silent> lf :ListEFolders<CR>
+  nnoremap <silent> lse :ListEFolders<CR>
 endif
 
 if !exists(':ListPFolders') && has_key(g:project_cfg, s:key_project_root)
   command -nargs=0 ListPFolders : call s:listProjectTagFolders()
-  nnoremap <silent> lt :ListPFolders<CR>
+  nnoremap <silent> lst :ListPFolders<CR>
 endif
 
