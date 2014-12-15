@@ -206,7 +206,7 @@ function! s:makeAllProjectTags(isForced)
   if tagImportMode == "all" 
       let tagPath = g:project_cfg[s:key_tag_path]
       let tagPathNameAll = tagPath.'/'.tagName.'_all'
-      if (!filereadable() || a:isForced)
+      if (!filereadable(tagPathNameAll) || a:isForced)
         call s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root])
       endif
       call add(retTagFiles, tagPath.'/'.tagName)
