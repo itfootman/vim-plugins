@@ -209,7 +209,7 @@ function! s:makeAllProjectTags(isForced)
       if (!filereadable(tagPathNameAll) || a:isForced)
         call s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root])
       endif
-      call add(retTagFiles, tagPath.'/'.tagName)
+      call add(retTagFiles, tagPath.'/'.tagName.'_all')
       call add(g:tag_folders, "root")
       return retTagFiles 
   endif

@@ -1,8 +1,5 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =6
-let g:netrw_dirhist_1='/media/external/cos-1.0/dlxp/device/generic/goldfish/audio'
-let g:netrw_dirhist_2='/media/external/cos-1.0/dlxp/device/generic/goldfish'
-let g:netrw_dirhist_3='/media/external/cos-1.0/dlxp/device/generic'
-let g:netrw_dirhist_4='/media/external/cos-1.0/dlxp/device'
-let g:netrw_dirhist_5='/media/external/cos-1.0/dlxp'
-let g:netrw_dirhist_6='/media/external/cos-1.0'
+let g:netrw_dirhist_cnt =3
+let g:netrw_dirhist_1='/media/external/cos-1.0/dlxp/sdk/wrapper/content'
+let g:netrw_dirhist_2='/media/external/cos-1.0/dlxp/sdk/wrapper/content/.cpplint'
+let g:netrw_dirhist_3='/media/external/cos-1.0/dlxp/sdk/wrapper'
