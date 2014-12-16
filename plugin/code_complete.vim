@@ -244,7 +244,7 @@ endfunction
 let g:template = {}
 let g:template['c'] = {}
 let g:template['c']['cc'] = "/*  */\<left>\<left>\<left>"
-let g:template['c']['cd'] = "/**\<cr>\<cr>*/"
+let g:template['c']['cd'] = "/**\<cr>\<cr>/"
 let g:template['c']['de'] = "#define     "
 let g:template['c']['in'] = "#include \"\"\<left>"
 let g:template['c']['is'] = "#include <>\<left>"
