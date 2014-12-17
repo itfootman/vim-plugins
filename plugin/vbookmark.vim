@@ -14,10 +14,13 @@ let g:isBroken = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Sign
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
-highlight Custom1 ctermfg=darkblue ctermbg=235
-highlight Custom2 ctermfg=black ctermbg=green
+if !exists('g:showLineNumberBackground') || g:showLineNumberBackground == 0 
+  highlight custom1 ctermfg=100
+else
+  highlight custom1 ctermfg=100 ctermbg=235
+endif
 
-exec 'sign define vbookmark_sign text=++ texthl=Custom1'
+exec 'sign define vbookmark_sign text=++ texthl=custom1'
 
 function! s:Vbookmark_placeSign(id, file, lineNo)
 ""    let signStr = 'sign define vbookmark_sign text='
