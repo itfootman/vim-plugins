@@ -14,7 +14,10 @@ let g:isBroken = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Sign
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
-exec 'sign define vbookmark_sign text=>> texthl=search'
+highlight Custom1 ctermfg=darkblue ctermbg=235
+highlight Custom2 ctermfg=black ctermbg=green
+
+exec 'sign define vbookmark_sign text=++ texthl=Custom1'
 
 function! s:Vbookmark_placeSign(id, file, lineNo)
 ""    let signStr = 'sign define vbookmark_sign text='
