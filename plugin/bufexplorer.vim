@@ -638,6 +638,9 @@ function! s:BuildBufferList()
         if empty(bufname(str2nr(buf.attributes))) == 1
             continue
         endif
+        if ("__Tagbar__" == bufname(str2nr(buf.attributes)))
+            continue
+        endif
 
         if (g:bufExplorerShowTabBuffer)
             let show_buffer = 0
