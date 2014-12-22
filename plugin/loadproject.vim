@@ -39,6 +39,7 @@ let g:project_cfg[s:key_session_name] = "mysession"
 let g:project_cfg[s:key_project_cfg_folder] = ".vimproject"
 let g:project_cfg[s:key_external_tag_name] = ".tags"
 let g:project_cfg[s:key_tag_import_mode] = "root"
+let g:tail_name_number = 0
 
 call add(g:tag_folders, "allfolders")
 function! s:stripspaces(input_string)
@@ -220,8 +221,9 @@ function! s:makeAllProjectTags(isForced)
         if g:project_cfg[s:key_tag_folders] == "."
           call add(tagFolders, "root")
         else
-          if isdirectory(g:project_root[s:key_project_root].'/'.g:project_cfg[s:key_tag_folders])
-            call add(tagFolders, g:project_cfg[s:key_project_root])
+          let tempFolder =  g:project_cfg[s:key_project_root].'/'.g:project_cfg[s:key_tag_folders]
+          if isdirectory(tempFolder)
+            call add(tagFolders, g:project_cfg[s:key_tag_folders])
           endif
         endif
       else
@@ -241,7 +243,13 @@ function! s:makeAllProjectTags(isForced)
         
         if isdirectory(g:project_cfg[s:key_project_root].'/'.tagFolder)
           let tagPath = g:project_cfg[s:key_tag_path]
-          let subTagPathName = tagPath.'/'.tagName.'_'.tagFolder
+          let tailName = tagFolder
+          if (stridx(tailName, '/') != -1)
+            let g:tail_name_number = g:tail_name_number + 1
+            let tailName = g:tail_name_number
+          endif
+          
+          let subTagPathName = tagPath.'/'.tagName.'_'.g:tail_name_number
           if !filereadable(subTagPathName) || a:isForced
             call s:makeTag(subTagPathName, g:project_cfg[s:key_project_root].'/'.tagFolder)
           endif 
