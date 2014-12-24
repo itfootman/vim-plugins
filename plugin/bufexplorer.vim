@@ -163,6 +163,11 @@ function! s:ActivateBuffer()
     endwhile
 
     let _bufnr = bufnr("%")
+
+    if (bufname(_bufnr) == "__Tagbar__")
+      return
+    endif
+
     let list = get(s:tabSpace, tabpagenr(), [-1])
 
     if !empty(list) && list[0] == '-1'

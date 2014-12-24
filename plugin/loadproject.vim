@@ -249,7 +249,7 @@ function! s:makeAllProjectTags(isForced)
             let tailName = g:tail_name_number
           endif
           
-          let subTagPathName = tagPath.'/'.tagName.'_'.g:tail_name_number
+          let subTagPathName = tagPath.'/'.tagName.'_'.tailName
           if !filereadable(subTagPathName) || a:isForced
             call s:makeTag(subTagPathName, g:project_cfg[s:key_project_root].'/'.tagFolder)
           endif 
