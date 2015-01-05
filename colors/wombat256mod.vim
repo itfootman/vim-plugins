@@ -59,7 +59,7 @@ hi DiffChange					ctermbg=237										guibg=#382a37
 "hi PmenuThumb
 "hi Question
 "hi Scrollbar
-"hi SignColumn
+hi SignColumn ctermfg=241	   ctermbg=232		cterm=none		guifg=#857b6f	guibg=#080808	gui=none
 "hi SpellBad
 "hi SpellCap
 "hi SpellLocal

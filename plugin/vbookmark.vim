@@ -14,13 +14,16 @@ let g:isBroken = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Sign
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
-if !exists('g:showLineNumberBackground') || g:showLineNumberBackground == 0 
-  highlight custom1 ctermfg=100
+
+if colors_name == "wombat256mod"
+  highlight custom ctermfg=100 ctermbg=232
+elseif colors_name == "solarized"
+  highlight custom ctermfg=100 ctermbg=235
 else
-  highlight custom1 ctermfg=100 ctermbg=235
+  highlight custom ctermfg=100 ctermbg=232
 endif
 
-exec 'sign define vbookmark_sign text=++ texthl=custom1'
+exec 'sign define vbookmark_sign text=++ texthl=custom'
 
 function! s:Vbookmark_placeSign(id, file, lineNo)
 ""    let signStr = 'sign define vbookmark_sign text='
