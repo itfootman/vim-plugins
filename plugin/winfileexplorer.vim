@@ -1554,7 +1554,7 @@ function! s:ListFileOfCurrentPath()
   endif
 
   let cur_buf_name = expand("%:t")
-  if cur_buf_name == g:FileExplorer_title || cur_buf_name == g:TagList_title || cur_buf_name == '[Buf List]'
+  if cur_buf_name == g:FileExplorer_title || cur_buf_name == '[Buf List]'
 	  return
   endif
 
@@ -1585,7 +1585,7 @@ function! s:SetCurrentPath()
 	  return
   endif
   let cur_buf_name = expand("%:t")
-  if cur_buf_name == g:FileExplorer_title || cur_buf_name == g:TagList_title || cur_buf_name == '[Buf List]'
+  if cur_buf_name == g:FileExplorer_title || cur_buf_name == '[Buf List]'
     return
   endif
   if g:old_buf_name == cur_buf_name
