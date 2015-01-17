@@ -15,10 +15,14 @@ let g:isBroken = 0
 " Sign
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-if colors_name == "wombat256mod"
-  highlight custom ctermfg=100 ctermbg=232
-elseif colors_name == "solarized"
-  highlight custom ctermfg=100 ctermbg=235
+if exists('colors_name')
+  if colors_name == "wombat256mod"
+    highlight custom ctermfg=100 ctermbg=232
+  elseif colors_name == "solarized"
+    highlight custom ctermfg=100 ctermbg=235
+  else
+    highlight custom ctermfg=100 ctermbg=232
+  endif
 else
   highlight custom ctermfg=100 ctermbg=232
 endif

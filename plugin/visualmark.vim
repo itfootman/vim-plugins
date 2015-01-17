@@ -18,9 +18,17 @@ if !has("signs")
 endif
 
 if &bg == "dark"
- highlight SignColor ctermfg=234 ctermbg=240 guifg=white guibg=gray25
+ if colors_name == "solarized"
+   highlight SignColor ctermfg=234 ctermbg=240 guifg=white guibg=gray25
+ else
+   highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
+ endif
 else
- highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
+ if colors_name == "wombat256mod"
+   highlight SignColor ctermfg=blue ctermbg=233 guifg=white guibg=gray25
+ elseif colors_name == "solarized"
+   highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
+ endif
 endif
 
 " ---------------------------------------------------------------------
