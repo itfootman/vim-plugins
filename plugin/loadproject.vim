@@ -12,7 +12,7 @@ let s:error_list = {"OK":0,"INVALID_PATH":-1,"NOT_PROJECT":-2}
 let s:project_cfg_name = ".projectcfg"
 let s:key_project_root = "projectRoot"
 let s:key_tag_path = "tagPath"
-let s:key_tag_name = "tagName"
+let s:key_tag_prefix_name = "tagPrefixName"
 let s:key_bookmarks_path = "bookmarksPath"
 let s:key_bookmarks_name = "bookmarksName"
 let s:key_session_path = "sessionPath"
@@ -21,23 +21,23 @@ let s:key_project_cfg_folder = "projectCfgFolder"
 let s:key_project_includes = "projectIncludes"
 let s:key_external_folders = "externalFolders"
 let s:key_external_includes = "externalIncludes"
-let s:key_external_tag_name = "externalTagName"
+let s:key_external_tag_prefix_name = "externalTagPrefixName"
 let s:key_tag_import_mode = "tagImportMode"
 let s:key_tag_folders= "tagIncludeFolders"
 let s:key_tag_exclude_folders = "tagExcludeFolders"
-"let g:project_cfg[s:key_external_tag_name] = ".tags"
+"let g:project_cfg[s:key_external_tag_prefix_name] = ".tags"
 let g:project_cfg = {}
 let g:external_folders = []
 let g:tag_folders = []
 
 let g:project_cfg[s:key_tag_path] = "."
-let g:project_cfg[s:key_tag_name] = "tags"
+let g:project_cfg[s:key_tag_prefix_name] = "tags"
 let g:project_cfg[s:key_bookmarks_path] = "."
 let g:project_cfg[s:key_bookmarks_name] = "bookmarks"
 let g:project_cfg[s:key_session_path] = "."
 let g:project_cfg[s:key_session_name] = "mysession"
 let g:project_cfg[s:key_project_cfg_folder] = ".vimproject"
-let g:project_cfg[s:key_external_tag_name] = ".tags"
+let g:project_cfg[s:key_external_tag_prefix_name] = "tags"
 let g:project_cfg[s:key_tag_import_mode] = "root"
 let g:tail_name_number = 0
 
@@ -70,7 +70,7 @@ function! s:loadProjectCfg()
       endif
       let foundProjecConfig = 1
       let g:project_cfg[s:key_project_root] = pathStep
-      let configItems = readfile(pathStep.'/'.projectCfgName, '', 80)
+      let configItems = readfile(pathStep.'/'.projectCfgName, '', 400)
       break
     endif
   endfor
@@ -84,8 +84,9 @@ function! s:loadProjectCfg()
   let g:project_root = g:project_cfg[s:key_project_root]
 
   for configItem in configItems
-    " Line is a comment
-    if match(configItem, '^#\+\(.*\)') != -1
+    " Line is a comment or empty
+    if match(configItem, '^#\+\(.*\)') != -1 ||
+    \  match (configItem, '\s+') !=-1
       continue
     endif
     let keyValues = split(configItem, "=")
@@ -124,15 +125,13 @@ function! s:loadProjectCfg()
 
   let tagPath = g:project_cfg[s:key_project_root].'/'.
               \ g:project_cfg[s:key_project_cfg_folder]
-  let tagName = g:project_cfg[s:key_tag_name]
+  let tagName = g:project_cfg[s:key_tag_prefix_name]
   if has_key(g:project_cfg, s:key_tag_path) &&
   \ isdirectory(g:project_cfg[s:key_tag_path])
-     if g:project_cfg[s:key_tag_path] != "."
-       let tagPath = g:project_cfg[s:key_tag_path]
+     if g:project_cfg[s:key_tag_path] == "."
        let g:project_cfg[s:key_tag_path] = tagPath
      endif
   endif
-  let g:project_cfg[s:key_tag_path] = tagPath
 
   let externalFolders = []
   if has_key(g:project_cfg, s:key_external_folders)
@@ -202,7 +201,7 @@ function! s:makeAllProjectTags(isForced)
   endif
 
   let tagPath = g:project_cfg[s:key_tag_path]
-  let tagName = g:project_cfg[s:key_tag_name]
+  let tagName = g:project_cfg[s:key_tag_prefix_name]
   let tagPathNameAll = tagPath.'/'.tagName."_all"
 
   if tagImportMode == "root" 
@@ -303,15 +302,15 @@ function! s:makeAllExternalTags(isForced)
   for externalFolder in g:external_folders
     let index = 0
     if isdirectory(externalFolder)
-      let exernalTagPathName = g:project_cfg[s:key_tag_path].'/'
-                             \ .g:project_cfg[s:key_external_tag_name]
-                             \ .'external'.index
+      let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
+                             \ .g:project_cfg[s:key_external_tag_prefix_name]
+                             \ .'_external'.index
       if !filereadable(externalTagPathName) || a:isForced
         call s:makeTag(externalTagPathName, externalFolder)
       endif
       let index = index + 1
       let retSetTagsCmd .= ','
-      let retSetTagsCmd .= exernalTagPathName
+      let retSetTagsCmd .= externalTagPathName
     endif
   endfor
 
@@ -359,7 +358,7 @@ function! s:makeProjectTags(...)
         call s:makeAllProjectTags(1)
         break
       elseif isdirectory(g:project_cfg[s:key_project_root].'/'.tagDir)
-        let subTagPathName = g:project_cfg[s:key_tag_path].'/'.g:project_cfg[s:key_tag_name].'_'.tagDir
+        let subTagPathName = g:project_cfg[s:key_tag_path].'/'.g:project_cfg[s:key_tag_prefix_name].'_'.tagDir
         call s:makeTag(subTagPathName, g:project_cfg[s:key_project_root].'/'.tagDir)
       endif
 
@@ -391,7 +390,7 @@ function! s:makeExternalProjectTags(...)
         continue
       endif
       let externalTagPathName = g:project_cfg[s:key_tag_path].
-      \                         g:project_cfg[s:key_external_tag_name].
+      \                         g:project_cfg[s:key_external_tag_prefix_name].
       \                         'external'.i
       let extDir = g:external_folders[str2nr(a:000[i])]
       if isdirectory(extDir)

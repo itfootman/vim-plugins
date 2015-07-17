@@ -1,0 +1,98 @@
+#############Some Hot Keys In Vim Command Line Mode#########
+# 1.  lst
+#     List the folders can make tags, Then you can type ':MakePTags <num>'
+#     to update tags of a folder. <num> is the number of tag folder.
+#     For example 'lst' show : 0: allfolders 1: pdk 2: framework
+#     You can type :MakePTags 1 to only update pdk's tag
+#     If you do not pass a parameter to ':MakePTags', it will tag all folders.
+# 2.  lse
+#     List the external folders can make tags. You can type 'MakeETags <num>'
+#     to update the external folder tags.
+#     If you do not pass a parameter to ':MakeETags', it will tag all external folders.
+#
+# 3.0 mm 
+#     Toggle a visual bookmarks. It can be saved to bookmark file which set in '.projectcfg'
+# 3.1 mn
+#     Next bookmark(Can cross the other file.)
+# 3.2 mp
+#     Previous bookmark(Can cross the other file.)
+# 3.3 ml
+#     List all bookmarks marked by 'mm'
+# 3.4 mg<num>g
+#     Go to the <num>th bookmark.
+# 3.5 :Mg <num>
+#     Go to the <num>th bookmark.
+# 3.6 :MG <num>
+#     Go to the <num>th bookmark group.
+# 3.7 :VbookmarkGroup <name>
+#     Define bookmark group named <name>
+#     If the group exist then active it.
+# 3.8 :VbookmarkGroupRemove <name>
+#     Remove bookmark group named <name>
+# 3.9 F2
+#     Next bookmark in this file.
+# 4.  mb
+#     Toggle a visual bookmakrs. It will not be saved to bookmark file.
+# 5.  CTRL+F5
+#     Save current session to session file which is set in '.projectcfg'
+# 6.  CTRL+F6
+#     Restore the session using 'CTRL+F5'
+# 7.  :Cw
+#     Change work folder to project root.
+# 8.  :MakePTags
+#     Refer to 1. please.
+# 9.  :MakeETags
+#     Refer to 2. please.
+
+# The root path of project.
+# '.' means the loacation of '.projectcfg' is the root path of project
+# You can also use the other path as the root.
+# Default value is '.'
+projectRoot=.
+
+# The tag path of project.
+# '.' means use project root path as tag path.
+# You can also use the other path as the tag path. 
+# Default value is '.'
+tagPath=.
+
+# The tag prefix name of project folders.
+# It will join the name of project folders which were tagged.
+tagPrefixName=tags
+
+# Mode of tagging, 'include' means including folders of project.
+# 'exclude' means exclude folders of project.
+# Using 'tagIncludeFolders' to set the incuded folders.
+# Using 'tagExcludeFolders' to set the excluded folders.
+# Default mode is 'root', 'root' means import all folders' tags of project.
+tagImportMode=include
+tagIncludeFolders=gaia,sdk,pdk
+
+# The path of saving bookmarks. '.' means to use project root path.
+# And it is the default value.
+bookmarksPath=.
+# The book mark file name.
+bookmarksName=bookmarks
+
+# The path of saving session.
+# Default value is '.'
+sessionPath=.
+# The name of session file.
+# Default value is 'session'
+sessionName=session
+
+# The folder name of saving all config files above.
+projectCfgFolder=.vimproject
+
+# The include paths of project.
+projectIncludes=.,sdk/include,gaia/base/include,out/target/common/R_gaia
+
+# The external folders.
+externalFolders=/usr/include
+
+# The include paths of external folders.
+externalIncludes=/usr/include
+
+# The external folders' tag prefix name.
+# Default value is 'tags'
+externalTagPrefixName=tags

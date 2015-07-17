@@ -25,7 +25,7 @@ if &bg == "dark"
  endif
 else
  if colors_name == "wombat256mod"
-   highlight SignColor ctermfg=blue ctermbg=233 guifg=white guibg=gray25
+   highlight SignColor ctermfg=248 ctermbg=236 guifg=white guibg=gray25
  elseif colors_name == "solarized"
    highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
  endif
