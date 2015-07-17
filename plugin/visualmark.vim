@@ -18,13 +18,13 @@ if !has("signs")
 endif
 
 if &bg == "dark"
- if colors_name == "solarized"
+ if has("colors_name") && colors_name == "solarized"
    highlight SignColor ctermfg=234 ctermbg=240 guifg=white guibg=gray25
  else
    highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
  endif
 else
- if colors_name == "wombat256mod"
+ if has("colors_name") && colors_name == "wombat256mod"
    highlight SignColor ctermfg=248 ctermbg=236 guifg=white guibg=gray25
  elseif colors_name == "solarized"
    highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
