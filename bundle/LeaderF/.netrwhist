@@ -1,5 +1,11 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =3
+let g:netrw_dirhist_cnt =9
 let g:netrw_dirhist_1='/media/external/cos-1.0/dlxp/sdk/wrapper/content'
 let g:netrw_dirhist_2='/media/external/cos-1.0/dlxp/sdk/wrapper/content/.cpplint'
 let g:netrw_dirhist_3='/media/external/cos-1.0/dlxp/sdk/wrapper'
+let g:netrw_dirhist_4='/home/broton/develop/zxq/yocto-layers/sources'
+let g:netrw_dirhist_5='/home/broton/develop/zxq/ZXQ/tools'
+let g:netrw_dirhist_6='/home/broton/develop/zxq/ZXQ'
+let g:netrw_dirhist_7='/home/broton/develop/zxq/ZXQ/tools'
+let g:netrw_dirhist_8='/home/broton/.vim/bundle/vim-colors-solarized'
+let g:netrw_dirhist_9='/home/broton/.vim/bundle/vim-colors-solarized/autoload'
