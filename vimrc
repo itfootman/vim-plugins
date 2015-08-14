@@ -28,29 +28,13 @@ set fileencoding=utf-8
 "set gfw=楷体:h11
 "set guifont=SimKai:h14
 
-let g:winManagerWidth = 25 
-let g:Tlist_WinWidth =  25 
-let g:tagbar_width = 25 
+let g:screen_col = str2nr(system('tput cols'))
+let g:winManagerWidth = float2nr(0.37 * g:screen_col)
+let g:Tlist_WinWidth =  float2nr(0.37 * g:screen_col)
+let g:tagbar_width =    float2nr(0.37 * g:screen_col)
 
 set langmenu=zh_CN,utf-8
 
-if !has("gui_running")
-  if $TERM_NAME  == "konsole"
-    set t_Co=16
-    set background=light
-    let g:solarized_termcolors=16
-    let g:solarized_termtrans = 1
-    colorscheme solarized
-  elseif $TERM_NAME == "gnome-terminal"
-    colorscheme eclipse
-  endif
- 
-"  set background=light
-"  colorscheme seoul256 
-else
- colorscheme solarized
- "colorscheme desertEx 
-endif
 
 function! <SID>ShowTabSpace()
 set list
@@ -119,12 +103,33 @@ set runtimepath^=~/.vim/bundle/neocomplcache.vim
 
 "LeafF
 set runtimepath^=~/.vim/bundle/LeaderF
+"solarized
+set runtimepath^=~/.vim/bundle/vim-colors-solarized
 let g:Lf_SearchStep = 5000
 let g:Lf_WildIgnore = {
     \ 'dir': ['.svn','.git','android-rt'],
     \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.class','*.so','*.py[co]','*projectcfg','*.vtg','*.vpb','*.vpw','*.vpj','*.vpwhistu','*.zip','*.a','*.p','*.pp','*.O','*.PP','*.P','*.png','*.jpeg','*.jif','*.jar','*.patch','*.apk','*.tgz','*.gz','*.sed','*.log']
     \}
  
+if !has("gui_running")
+  if $TERM_NAME  == "konsole"
+    set background=dark
+    set t_Co=16
+    let g:solarized_termcolors=16
+    let g:solarized_termtrans = 1
+    colorscheme solarized
+  elseif $TERM_NAME == "gnome-terminal"
+    colorscheme eclipse
+  elseif $TERM_NAME == "lilyterm"
+    colorscheme seoul256
+endif
+ 
+"  set background=light
+"  colorscheme seoul256 
+else
+ colorscheme solarized
+ "colorscheme desertEx 
+endif
 "match DiffAdd '\%>80v.*'
 "highlight OverLength ctermfg=magenta guibg=#592929
 "match OverLength /\%81v.\+/

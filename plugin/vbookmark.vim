@@ -19,7 +19,7 @@ if exists('colors_name')
   if colors_name == "wombat256mod"
     highlight custom ctermfg=100 ctermbg=232
   elseif colors_name == "solarized"
-    highlight custom ctermfg=100 ctermbg=235
+    highlight custom ctermfg=100 ctermbg=0
   else
     highlight custom ctermfg=100 ctermbg=232
   endif
