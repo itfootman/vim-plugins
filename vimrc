@@ -121,7 +121,8 @@ if !has("gui_running")
   elseif $TERM_NAME == "gnome-terminal"
     colorscheme eclipse
   elseif $TERM_NAME == "lilyterm"
-    colorscheme seoul256
+    set t_Co=256
+    colorscheme wombat256mod
 endif
  
 "  set background=light
