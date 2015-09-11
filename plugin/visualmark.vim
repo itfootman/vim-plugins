@@ -17,18 +17,16 @@ if !has("signs")
  finish
 endif
 
-if &bg == "dark"
- if has("colors_name") && colors_name == "solarized"
-   highlight SignColor ctermfg=234 ctermbg=240 guifg=white guibg=gray25
- else
-   highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
- endif
+if exists("colors_name") && colors_name == "solarized"
+  highlight SignColor ctermfg=234 ctermbg=240 guifg=white guibg=gray25
 else
- if has("colors_name") && colors_name == "wombat256mod"
-   highlight SignColor ctermfg=248 ctermbg=236 guifg=white guibg=gray25
- else
-   highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
- endif
+  highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
+endif
+
+if exists("colors_name") && colors_name == "wombat256mod"
+  highlight SignColor ctermfg=248 ctermbg=236 guifg=white guibg=gray25
+else
+  highlight SignColor ctermbg=black ctermfg=blue guibg=grey guifg=RoyalBlue3
 endif
 
 " ---------------------------------------------------------------------
