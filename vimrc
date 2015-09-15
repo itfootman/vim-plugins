@@ -62,10 +62,10 @@ nmap <S-F9> :files<CR>
 
 syntax enable
 syntax on
-let Tlist_Show_One_File=1 " 仅显示当前文件的tags目录
-let Tlist_Exit_OnlyWindow=1 " 当仅剩下taglist窗口的时候启动关闭
-let Tlist_Inc_Winwidth=0
-let Tlist_Use_Right_Window=1
+""let Tlist_Show_One_File=1 " 仅显示当前文件的tags目录
+""let Tlist_Exit_OnlyWindow=1 " 当仅剩下taglist窗口的时候启动关闭
+""let Tlist_Inc_Winwidth=0
+""let Tlist_Use_Right_Window=1
 "let Tlist_File_Fold_Auto_Close=1
 let g:miniBufExplMapCTabSwitchBufs = 1 " 供过tab切换窗口（这个好像没有发挥作用，不知道为什么）
 let g:miniBufExplMapWindowNavVim = 1 " 通过h,j,k,l切换窗口
@@ -83,6 +83,9 @@ let OmniCpp_ShowPrototypeInAbbr = 1 " show function prototype  in popup window
 let OmniCpp_GlobalScopeSearch=1
 let OmniCpp_DisplayMode=1
 let OmniCpp_DefaultNamespaces=["std"]"
+
+set runtimepath^=~/.vim/bundle/nerdtree
+let g:NERDTreeWinSize = float2nr(0.37 * g:screen_col)
 
 "CtrlP
 "let g:loaded_ctrlp = 1
@@ -122,6 +125,7 @@ if !has("gui_running")
     colorscheme eclipse
   elseif $TERM_NAME == "lilyterm"
     set t_Co=256
+    set background=dark
     colorscheme wombat256mod
 endif
  
@@ -134,6 +138,17 @@ endif
 "match DiffAdd '\%>80v.*'
 "highlight OverLength ctermfg=magenta guibg=#592929
 "match OverLength /\%81v.\+/
+
+let g:NERDTree_title='NERD Tree'
+function! NERDTree_Start()
+    exec 'NERDTree'
+endfunction
+
+function! NERDTree_IsValid()
+    return 1
+endfunction
+
+let g:winManagerWindowLayout = "NERDTree|BufExplorer,Tarbar"
 
 function! <SID>CopyPath()
     let @+=expand("%:p:h")
@@ -194,7 +209,7 @@ nmap <C-F9> :set mouse=<CR>
 nmap <C-F3> :call ShowFuncTag()<CR>
 nmap <C-F4> :pclose<CR>
 nmap <C-S-y> :redo<CR>
-map <F9> :TlistToggle<cr>
+"map <F9> :NERDTreeToggle<cr>
 map <F3> :WMToggle<cr>
 nmap <C-F7> :VbookmarkGroup<CR>
 nmap <C-F10> :VbookmarkSave<CR>
