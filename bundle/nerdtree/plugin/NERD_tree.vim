@@ -138,6 +138,8 @@ call s:initVariable("g:NERDTreeMapToggleZoom", "A")
 call s:initVariable("g:NERDTreeMapUpdir", "u")
 call s:initVariable("g:NERDTreeMapUpdirKeepOpen", "U")
 call s:initVariable("g:NERDTreeMapCWD", "CD")
+call s:initVariable("g:NERDTreeMapChangeToCurPath", "cw")
+call s:initVariable("g:NERDTreeCurDir", getcwd())
 
 "SECTION: Load class files{{{2
 call nerdtree#loadClassFiles()
@@ -154,6 +156,7 @@ augroup NERDTree
 
     "disallow insert mode in the NERDTree
     exec "autocmd BufEnter ". g:NERDTreeCreator.BufNamePrefix() ."* stopinsert"
+    exec "autocmd BufEnter ". "* call NERDTreeSetCurDir()"
 augroup END
 
 if g:NERDTreeHijackNetrw
@@ -165,6 +168,14 @@ endif
 
 " SECTION: Public API {{{1
 "============================================================
+function! NERDTreeSetCurDir()
+  let s:cur_buf_name = expand("%:t")
+  if s:cur_buf_name =~ g:NERDTreeCreator.BufNamePrefix().'[1-9]\+' || s:cur_buf_name == '[Buf List]'
+    return
+  endif
+  let g:NERDTreeCurDir = expand("%:p:h")
+endfunction
+
 function! NERDTreeAddMenuItem(options)
     call g:NERDTreeMenuItem.Create(a:options)
 endfunction

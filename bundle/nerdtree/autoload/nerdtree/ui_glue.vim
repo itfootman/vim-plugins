@@ -45,6 +45,7 @@ function! nerdtree#ui_glue#createDefaultBindings()
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapQuit, 'scope': "all", 'callback': s."closeTreeWindow" })
 
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapCWD, 'scope': "all", 'callback': "nerdtree#ui_glue#chRootCwd" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChangeToCurPath, 'scope': "all", 'callback': "nerdtree#ui_glue#chCurDir" })
 
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapRefreshRoot, 'scope': "all", 'callback': s."refreshRoot" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapRefresh, 'scope': "Node", 'callback': s."refreshCurrent" })
@@ -150,6 +151,19 @@ endfunction
 function! nerdtree#ui_glue#chRootCwd()
     try
         let cwd = g:NERDTreePath.New(getcwd())
+    catch /^NERDTree.InvalidArgumentsError/
+        call nerdtree#echo("current directory does not exist.")
+        return
+    endtry
+    if cwd.str() == g:NERDTreeFileNode.GetRootForTab().path.str()
+       return
+    endif
+    call s:chRoot(g:NERDTreeDirNode.New(cwd))
+endfunction
+
+function! nerdtree#ui_glue#chCurDir()
+    try
+        let cwd = g:NERDTreePath.New(g:NERDTreeCurDir)
     catch /^NERDTree.InvalidArgumentsError/
         call nerdtree#echo("current directory does not exist.")
         return
