@@ -15,6 +15,8 @@ let s:key_tag_path = "tagPath"
 let s:key_tag_prefix_name = "tagPrefixName"
 let s:key_bookmarks_path = "bookmarksPath"
 let s:key_bookmarks_name = "bookmarksName"
+let s:key_NERDTreeBookmarks_path = "NERDTreeBookmarksPath"
+let s:key_NERDTreeBookmarks_name = "NERDTreeBookmarksName"
 let s:key_session_path = "sessionPath"
 let s:key_session_name = "sessionName"
 let s:key_project_cfg_folder = "projectCfgFolder"
@@ -34,6 +36,8 @@ let g:project_cfg[s:key_tag_path] = "."
 let g:project_cfg[s:key_tag_prefix_name] = "tags"
 let g:project_cfg[s:key_bookmarks_path] = "."
 let g:project_cfg[s:key_bookmarks_name] = "bookmarks"
+let g:project_cfg[s:key_NERDTreeBookmarks_path] = "."
+let g:project_cfg[s:key_NERDTreeBookmarks_name] = "NERDTreeBookmarks"
 let g:project_cfg[s:key_session_path] = "."
 let g:project_cfg[s:key_session_name] = "mysession"
 let g:project_cfg[s:key_project_cfg_folder] = ".vimproject"
@@ -473,6 +477,22 @@ function! s:setBookmarksPath()
   return g:vbookmark_bookmarkSaveFile
 endfunction
 
+function! s:setNERDTreeBookmarksPath()
+  if !has_key(g:project_cfg, s:key_project_root)
+    return s:error_list["NOT_PROJECT"]
+  endif
+
+  let bookmarksPath = g:project_cfg[s:key_project_root].'/' 
+                    \ .g:project_cfg[s:key_project_cfg_folder]
+  if isdirectory(g:project_cfg[s:key_NERDTreeBookmarks_path]) &&
+   \ g:project_cfg[s:key_bookmarks_path] != "."
+     let bookmarksPath = g:project_cfg[s:key_NERDTreeBookmarks_path] 
+  endif
+  let bookmarksName = g:project_cfg[s:key_NERDTreeBookmarks_name]
+  let g:NERDTreeBookmarksFile =  bookmarksPath . '/' . bookmarksName
+  return g:NERDTreeBookmarksFile
+endfunction
+
 "Generate set includes command for current project 
 function! s:generateIncludesCmd(initialCmd, keyProjectDir, keyIncludes)
   let setIncludesCmd = a:initialCmd
@@ -567,6 +587,7 @@ let retStatus = s:loadProjectCfg()
 if retStatus  == s:error_list["OK"]
   call s:setTags()
   call s:setBookmarksPath()
+  call s:setNERDTreeBookmarksPath()
   call s:setIncludes()
 else 
   " This value will work when there is vbookmark
