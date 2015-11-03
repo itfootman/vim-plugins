@@ -27,93 +27,19 @@ set fileencoding=utf-8
 "set fileencodings=ucs-bom,utf-8,chinese,cp936,gbk
 "set gfw=楷体:h11
 "set guifont=SimKai:h14
-
-let g:screen_col = str2nr(system('tput cols'))
-let g:winManagerWidth = float2nr(0.37 * g:screen_col)
-let g:Tlist_WinWidth =  float2nr(0.37 * g:screen_col)
-let g:tagbar_width =    float2nr(0.37 * g:screen_col)
-
 set langmenu=zh_CN,utf-8
-
-
-function! <SID>ShowTabSpace()
-set list
-set listchars=tab:>-,trail:-
-endfunction
-
-function! <SID>HideTabSpace()
-set nolist
-endfunction
-
-function! <SID>TrimTailSpace()
-:%s/ *$//
-endfunction
-
-function! <SID>ConvertTabToSpace()
-set expandtab
-%retab!
-endfunction
-
-nmap <S-F5> :call <SID>ShowTabSpace()<CR>
-nmap <S-F6> :call <SID>HideTabSpace()<CR>
-nmap <S-F7> :call <SID>ConvertTabToSpace()<CR>
-nmap <S-F8> :call <SID>TrimTailSpace()<CR>
-nmap <S-F9> :files<CR>
-
 syntax enable
 syntax on
-""let Tlist_Show_One_File=1 " 仅显示当前文件的tags目录
-""let Tlist_Exit_OnlyWindow=1 " 当仅剩下taglist窗口的时候启动关闭
-""let Tlist_Inc_Winwidth=0
-""let Tlist_Use_Right_Window=1
-"let Tlist_File_Fold_Auto_Close=1
-let g:miniBufExplMapCTabSwitchBufs = 1 " 供过tab切换窗口（这个好像没有发挥作用，不知道为什么）
-let g:miniBufExplMapWindowNavVim = 1 " 通过h,j,k,l切换窗口
-let g:miniBufExplMapWindowNavArrows = 1 " 通过方向键切换窗口
-let g:bufExplorerSortBy='mru'
 
-"Omnicppcomplete
-set runtimepath^=~/.vim/bundle/OmniCppComplete
-let g:neocomplcache_enable_at_startup = 1 " Auto complete
-let OmniCpp_MayCompleteArrow = 1 " autocomplete with ->
-let OmniCpp_MayCompleteScope = 1 " autocomplete with ::
-let OmniCpp_SelectFirstItem = 2 " select first item (but don't insert)
-let OmniCpp_NamespaceSearch = 2 " search namespaces in this and included files
-let OmniCpp_ShowPrototypeInAbbr = 1 " show function prototype  in popup window
-let OmniCpp_GlobalScopeSearch=1
-let OmniCpp_DisplayMode=1
-let OmniCpp_DefaultNamespaces=["std"]"
+let g:screen_col = str2nr(system('tput cols'))
+set runtimepath^=~/.vim/bundle/vim-colors-solarized,
+               \~/.vim/bundle/loadproject,
+               \~/.vim/bundle/nerdtree,
+               \~/.vim/bundle/tagbar,
+               \~/.vim/bundle/neocomplcache.vim,
+               \~/.vim/bundle/LeaderF,
+               \~/.vim/bundle/OmniCppComplete
 
-set runtimepath^=~/.vim/bundle/nerdtree
-let g:NERDTreeWinSize = float2nr(0.37 * g:screen_col)
-
-"CtrlP
-"let g:loaded_ctrlp = 1
-"set wildignore+=*/tmp/*,*/android-rt/*,*.so,*.swp,*.zip,*.o,*.a,*.p,*.pp,*.O,*.P,*.PP,*.png,*.jpeg,*.jif,*.jar,*.patch,*.pkg,*.apk,*.tgz,*.gz,*.sed,*.log
-"set runtimepath^=~/.vim/bundle/ctrlp.vim
-"let g:ctrlp_custom_ignore = {
-"    \ 'dir':  '\v[\/]\.(git|hg|svn)$',
-"    \ 'file': '\v(\.cpp|\.h|\.hh|\.cxx)@<!$',
-"    \ 'link': 'SOME_BAD_SYMBOLIC_LINKS',
-"    \ }
-"let g:ctrlp_working_path_mode = 'c'
-"let g:ctrlp_max_files = 150000
-"let g:ctrlp_use_caching = 1
-"let g:ctrlp_clear_cache_on_exit = 0
-
-set runtimepath^=~/.vim/bundle/tagbar
-set runtimepath^=~/.vim/bundle/neocomplcache.vim
-
-"LeafF
-set runtimepath^=~/.vim/bundle/LeaderF
-"solarized
-set runtimepath^=~/.vim/bundle/vim-colors-solarized
-let g:Lf_SearchStep = 5000
-let g:Lf_WildIgnore = {
-    \ 'dir': ['.svn','.git','android-rt'],
-    \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.class','*.so','*.py[co]','*projectcfg','*.vtg','*.vpb','*.vpw','*.vpj','*.vpwhistu','*.zip','*.a','*.p','*.pp','*.O','*.PP','*.P','*.png','*.jpeg','*.jif','*.jar','*.patch','*.apk','*.tgz','*.gz','*.sed','*.log']
-    \}
- 
 if !has("gui_running")
   if $TERM_NAME  == "konsole"
     set background=dark
@@ -135,11 +61,9 @@ else
  colorscheme solarized
  "colorscheme desertEx 
 endif
-"match DiffAdd '\%>80v.*'
-"highlight OverLength ctermfg=magenta guibg=#592929
-"match OverLength /\%81v.\+/
 
 let g:NERDTree_title='NERD Tree'
+let g:NERDTreeWinSize = float2nr(0.37 * g:screen_col)
 function! NERDTree_Start()
     exec 'NERDTree'
 endfunction
@@ -149,6 +73,64 @@ function! NERDTree_IsValid()
 endfunction
 
 let g:winManagerWindowLayout = "NERDTree|BufExplorer,Tarbar"
+
+
+let g:Lf_SearchStep = 7000
+let g:Lf_WildIgnore = {
+    \ 'dir': ['.svn','.git','android-rt'],
+    \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.class','*.so','*.py[co]','*projectcfg','*.vtg','*.vpb','*.vpw','*.vpj','*.vpwhistu','*.zip','*.a','*.p','*.pp','*.O','*.PP','*.P','*.png','*.jpeg','*.jif','*.jar','*.patch','*.apk','*.tgz','*.gz','*.sed','*.log']
+    \}
+
+"Omnicppcomplete
+let g:neocomplcache_enable_at_startup = 1 " Auto complete
+let OmniCpp_MayCompleteArrow = 1 " autocomplete with ->
+let OmniCpp_MayCompleteScope = 1 " autocomplete with ::
+let OmniCpp_SelectFirstItem = 2 " select first item (but don't insert)
+let OmniCpp_NamespaceSearch = 2 " search namespaces in this and included files
+let OmniCpp_ShowPrototypeInAbbr = 1 " show function prototype  in popup window
+let OmniCpp_GlobalScopeSearch=1
+let OmniCpp_DisplayMode=1
+let OmniCpp_DefaultNamespaces=["std"]"
+
+let g:winManagerWidth = float2nr(0.37 * g:screen_col)
+let g:Tlist_WinWidth =  float2nr(0.37 * g:screen_col)
+let g:tagbar_width =    float2nr(0.37 * g:screen_col)
+
+let g:miniBufExplMapCTabSwitchBufs = 1 " 供过tab切换窗口（这个好像没有发挥作用，不知道为什么）
+let g:miniBufExplMapWindowNavVim = 1 " 通过h,j,k,l切换窗口
+let g:miniBufExplMapWindowNavArrows = 1 " 通过方向键切换窗口
+let g:bufExplorerSortBy='mru'
+
+""let Tlist_Show_One_File=1 " 仅显示当前文件的tags目录
+""let Tlist_Exit_OnlyWindow=1 " 当仅剩下taglist窗口的时候启动关闭
+""let Tlist_Inc_Winwidth=0
+""let Tlist_Use_Right_Window=1
+"let Tlist_File_Fold_Auto_Close=1
+ 
+
+"autocmd VimLeave * mks! ~/.vim/vimsession.vim
+"match DiffAdd '\%>80v.*'
+"highlight OverLength ctermfg=magenta guibg=#592929
+"match OverLength /\%81v.\+/
+"
+
+function! <SID>ShowTabSpace()
+set list
+set listchars=tab:>-,trail:-
+endfunction
+
+function! <SID>HideTabSpace()
+set nolist
+endfunction
+
+function! <SID>TrimTailSpace()
+:%s/ *$//
+endfunction
+
+function! <SID>ConvertTabToSpace()
+set expandtab
+%retab!
+endfunction
 
 function! <SID>CopyPath()
     let @+=expand("%:p:h")
@@ -162,9 +144,6 @@ function! <SID>CopyFileName()
     let @+=expand("%:t")
 endfunction
 
-"nmap gf :tabedit <cfile><CR>
-
-"autocmd VimLeave * mks! ~/.vim/vimsession.vim
 
 function ShowFuncTag()
     let wordUnderCursor = expand("<cword>")
@@ -199,6 +178,12 @@ if has("autocmd")
    autocmd BufReadPost * if line("'\"") > 0 && line ("'\"") <= line("$") | exe "normal g'\"" |  endif
 endif
 
+"nmap gf :tabedit <cfile><CR>
+nmap <S-F5> :call <SID>ShowTabSpace()<CR>
+nmap <S-F6> :call <SID>HideTabSpace()<CR>
+nmap <S-F7> :call <SID>ConvertTabToSpace()<CR>
+nmap <S-F8> :call <SID>TrimTailSpace()<CR>
+nmap <S-F9> :files<CR>
 nmap <F10> :call <SID>OpenFileInProject()<CR>
 nmap <F6> :call <SID>CopyPath()<CR>
 nmap <F7> :call <SID>CopyFilePathName()<CR>
