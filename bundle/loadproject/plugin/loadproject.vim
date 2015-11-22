@@ -27,10 +27,19 @@ let s:key_external_tag_prefix_name = "externalTagPrefixName"
 let s:key_tag_import_mode = "tagImportMode"
 let s:key_tag_folders= "tagIncludeFolders"
 let s:key_tag_exclude_folders = "tagExcludeFolders"
+let s:cplusplus = "cplusplus"
+let s:java = "java"
+let s:js = "js"
+let s:delimiter = "_"
+let s:folder_type_cplusplus = 0x01
+let s:folder_type_java = 0x02
+let s:folder_type_js = 0x04
 "let g:project_cfg[s:key_external_tag_prefix_name] = ".tags"
 let g:project_cfg = {}
 let g:external_folders = []
 let g:tag_folders = []
+let g:tag_folder_tagfile_map = {}
+let g:external_tagfolder_tagfile_map = {}
 
 let g:project_cfg[s:key_tag_path] = "."
 let g:project_cfg[s:key_tag_prefix_name] = "tags"
@@ -42,10 +51,12 @@ let g:project_cfg[s:key_session_path] = "."
 let g:project_cfg[s:key_session_name] = "mysession"
 let g:project_cfg[s:key_project_cfg_folder] = ".vimproject"
 let g:project_cfg[s:key_external_tag_prefix_name] = "tags"
-let g:project_cfg[s:key_tag_import_mode] = "root"
+let g:project_cfg[s:key_tag_import_mode] = "include"
+let g:project_cfg[s:key_tag_folders] = "."
 let g:tail_name_number = 0
+let g:TRUE = 1
+let g:FALSE = 0
 
-call add(g:tag_folders, "allfolders")
 function! s:stripspaces(input_string)
   return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
@@ -59,9 +70,9 @@ function! s:loadProjectCfg()
   let splash = '/'
   let projectCfgName = s:project_cfg_name
   let here = s:stripnewlines(system("pwd")).splash
- 
+
   let pathItems = split(here, splash)
-  let pathStep = "" 
+  let pathStep = ""
   let configItems = []
   for item in pathItems
     let item = s:stripnewlines(item)
@@ -80,10 +91,10 @@ function! s:loadProjectCfg()
   endfor
 
   " Return if project config not found
-  if !has_key(g:project_cfg, s:key_project_root) 
+  if !has_key(g:project_cfg, s:key_project_root)
     return s:error_list['NOT_PROJECT']
   endif
- 
+
   " For CtrlP
   let g:project_root = g:project_cfg[s:key_project_root]
 
@@ -108,13 +119,13 @@ function! s:loadProjectCfg()
       if index == 1
         let key = keyValue
       elseif index == 2
-        if key == s:key_project_root 
+        if key == s:key_project_root
           if keyValue != "." &&
         \    isdirectory(g:project_cfg[s:key_project_root])
-            let g:project_cfg[key] = keyValue 
+            let g:project_cfg[key] = keyValue
           endif
         else
-            let g:project_cfg[key] = keyValue 
+            let g:project_cfg[key] = keyValue
         endif
       endif
       let index = index + 1
@@ -124,7 +135,7 @@ function! s:loadProjectCfg()
   if !isdirectory(g:project_cfg[s:key_project_root].'/'.
     \ g:project_cfg[s:key_project_cfg_folder])
     exe ':silent !mkdir '.g:project_cfg[s:key_project_root].'/'.
-    \ g:project_cfg[s:key_project_cfg_folder] 
+    \ g:project_cfg[s:key_project_cfg_folder]
   endif
 
   let tagPath = g:project_cfg[s:key_project_root].'/'.
@@ -169,106 +180,285 @@ function! s:loadProjectCfg()
 endfunction
 
 "Generate tags file
-function! s:makeTag(path, project)
+function! s:makeTag(path, project, projectTypes, isForced)
   if !isdirectory(a:project)
-    return s:error_list["NOT_PROJECT"]
+    return []
   endif
 
-  let ctagCommand = "ctags -f "
-  let ctagCommand .= a:path
-  let ctagCommand .= " --file-scope=yes
-\                    --fields=+iaS --extra=+q
-\                    --langmap=C++:.C.h.c.cpp.hpp.cc 
-\                    --languages=c,c++ --links=yes
-\                    --c-kinds=+p --c++-kinds=+p -R " 
-  let ctagCommand .= a:project
-  let ctagCommand .= '/'
-  let ctagCommand .= " > /dev/null 2>&1 &"
-  exe ':silent !' . ctagCommand
+  let retFolderTagNames = []
+  let ctagCommandPrix = "ctags -f "
+  let ctagCommandCplus = ''
+  let ctagCommandJava = ''
+  let ctagCommandJs = ''
+  let commandCplus = " --file-scope=yes
+  \                    --fields=+iaS --extra=+q
+  \                    --langmap=C++:.C.h.c.cpp.hpp.cc
+  \                    --languages=c,c++ --links=yes
+  \                    --c-kinds=+p --c++-kinds=+p -R "
 
-  return s:error_list["OK"]
+  let commandJava = " --langmap=java:.java --languages=java -R "
+
+  let ctagCommandCplus  = ctagCommandPrix . a:path . s:delimiter. s:cplusplus
+  let ctagCommandCplus .= commandCplus
+  let ctagCommandCplus .= a:project
+  let ctagCommandCplus .= '/'
+  let ctagCommandCplus .= " > /dev/null 2>&1 &"
+
+  let ctagCommandJava = ctagCommandPrix . a:path . s:delimiter. s:java
+  let ctagCommandJava .= commandJava
+  let ctagCommandJava .= a:project
+  let ctagCommandJava .= '/'
+  let ctagCommandJava .= " > /dev/null 2>&1 &"
+
+  let ctagCommandJs  = "$HOME/.vim/bundle/loadproject/plugin/make_js_tags.sh  "
+  let ctagCommandJs .= a:project
+
+  let lstCtagsCommands = []
+  let cplusplusTagName = a:path.s:delimiter.s:cplusplus
+  let javaTagName = a:path.s:delimiter.s:java
+  let jsTagName = a:path.s:delimiter.s:js
+  let ctagCommandJs .= ' ' . jsTagName
+  if a:projectTypes == s:folder_type_cplusplus
+    if a:isForced || !filereadable(cplusplusTagName)
+      let tmpcmd = 'rm -f ' . cplusplusTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandCplus)
+    endif
+
+    call add(retFolderTagNames, cplusplusTagName)
+  elseif a:projectTypes == s:folder_type_java
+    if a:isForced || !filereadable(javaTagName)
+      let tmpcmd = 'rm -f ' . javaTagName
+      call add(lstCtagsCommands, ctagCommandJava)
+    endif
+
+    call add(retFolderTagNames, a:path.s:delimiter.s:java)
+  elseif a:projectTypes == s:folder_type_js
+    if a:isForced || !filereadable(jsTagName)
+      let tmpcmd = 'rm -f ' . jsTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandJs)
+    endif
+
+    call add(retFolderTagNames, jsTagName)
+  elseif a:projectTypes == s:folder_type_cplusplus + s:folder_type_java
+    if a:isForced || !filereadable(cplusplusTagName)
+      let tmpcmd = 'rm -f ' . cplusplusTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandCplus)
+    endif
+
+    if a:isForced || !filereadable(javaTagName)
+      let tmpcmd = 'rm -f ' . javaTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandJava)
+    endif
+
+    call add(retFolderTagNames, cplusplusTagName)
+    call add(retFolderTagNames, javaTagName)
+  elseif a:projectTypes == s:folder_type_cplusplus + s:folder_type_js
+    if a:isForced || !filereadable(cplusplusTagName)
+      let tmpcmd = 'rm -f ' . cplusplusTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandCplus)
+    endif
+
+    if a:isForced || !filereadable(jsTagName)
+      let tmpcmd = 'rm -f ' . jsTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandJs)
+    endif
+
+    call add(retFolderTagNames, cplusplusTagName)
+    call add(retFolderTagNames, jsTagName)
+  elseif a:projectTypes == s:folder_type_java + s:folder_type_js
+    if a:isForced || !filereadable(javaTagName)
+      let tmpcmd = 'rm -f ' . javaTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandJava)
+    endif
+
+    if a:isForced || !filereadable(jsTagName)
+      let tmpcmd = 'rm -f ' . jsTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandJs)
+    endif
+
+    call add(retFolderTagNames, javaTagName)
+    call add(retFolderTagNames, jsTagName)
+  elseif a:projectTypes == s:folder_type_cplusplus + s:folder_type_java + s:folder_type_js
+    if a:isForced || !filereadable(cplusplusTagName)
+      let tmpcmd = 'rm -f ' .  cplusplusTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandCplus)
+    endif
+
+    if a:isForced || !filereadable(javaTagName)
+      let tmpcmd = 'rm -f ' .  javaTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandJava)
+    endif
+
+    if a:isForced || !filereadable(jsTagName)
+      let tmpcmd = 'rm -f ' . jsTagName
+      call system(tmpcmd)
+      call add(lstCtagsCommands, ctagCommandJs)
+    endif
+
+    call add(retFolderTagNames, cplusplusTagName)
+    call add(retFolderTagNames, javaTagName)
+    call add(retFolderTagNames, jsTagName)
+  else
+    echoerr "Invalid path, impossible..."
+    return []
+  endif
+
+  for command in lstCtagsCommands
+    exe ':silent !' . command
+  endfor
+
+  return retFolderTagNames
+endfunction
+
+"Calculate project types
+function! s:calculateProjectTypes(folderTypes)
+  let maskFolderTypes = 0x00
+
+  let lstFolderTypes = split(a:folderTypes, "|")
+  for folderType in lstFolderTypes
+    if folderType == s:cplusplus
+      let maskFolderTypes += s:folder_type_cplusplus
+    elseif folderType == s:java
+      let maskFolderTypes += s:folder_type_java
+    elseif folderType == s:js
+      let maskFolderTypes += s:folder_type_js
+    else
+      echomsg "error type, do nothing."
+    endif
+  endfor
+
+  if maskFolderTypes == 0x00
+    let maskFolderTypes = s:folder_type_cplusplus
+  endif
+
+  return maskFolderTypes
+endfunction
+
+"Todo end with /
+function! s:generateTagPrefixNameWithFolder(folderName)
+    let folderNodes = split(a:folderName, "/")
+    let retTagNamePrix = ''
+    for folderNode in folderNodes
+      let folderNode = s:stripspaces(folderNode)
+      if (!empty(folderNode))
+        let retTagNamePrix .= (folderNode . '_')
+      endif
+    endfor
+
+    return retTagNamePrix
+endfunction
+
+"Make tags of a folder with types
+function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
+  let folderAndStrTypes = split(a:folderWithTypes, ":")
+
+  if empty(folderAndStrTypes)
+    return
+  endif
+
+  let tagFolder = folderAndStrTypes[0]
+  let folderStrTypes = s:cplusplus
+
+  if len(folderAndStrTypes) > 1
+    let folderStrTypes = folderAndStrTypes[1]
+  endif
+
+  let folderMaskTypes = s:calculateProjectTypes(folderStrTypes)
+
+  if tagFolder == "."
+    let tagPath = g:project_cfg[s:key_tag_path]
+    let tagName = g:project_cfg[s:key_tag_prefix_name]
+    let tagPathNameAll = tagPath.'/'. "all" . "_" . tagName
+
+    let retFolderTagNames = s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root], folderMaskTypes, a:isForced)
+    if len(folderAndStrTypes) > 1
+      if a:isForced == 0
+        let tmpIndex = 'root:'.folderAndStrTypes[1]
+        let g:tag_folder_tagfile_map[tmpIndex] = retFolderTagNames
+        call add(g:tag_folders, tmpIndex)
+      endif
+    else
+      if a:isForced == 0
+        let g:tag_folder_tagfile_map['root'] = retFolderTagNames
+        call add(g:tag_folders, "root")
+      endif
+    endif
+    return
+  endif
+
+  let fullTagFolderPath = g:project_cfg[s:key_project_root].'/'.tagFolder
+  let retFolderTagNames = []
+  if isdirectory(fullTagFolderPath)
+    let tagPath = g:project_cfg[s:key_tag_path]
+    let tagName = g:project_cfg[s:key_tag_prefix_name]
+    let tagPrefixName = s:generateTagPrefixNameWithFolder(tagFolder)
+    let tagPathAndName = tagPath.'/'. tagPrefixName . tagName
+    let retFolderTagNames = s:makeTag(tagPathAndName, fullTagFolderPath, folderMaskTypes, a:isForced)
+    if a:isForced == 0
+      call add(g:tag_folders, a:folderWithTypes)
+      let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
+    endif
+  endif
 endfunction
 
 "Make tags of folders
 function! s:makeAllProjectTags(isForced)
-  let retTagFiles = []
   if !isdirectory(g:project_cfg[s:key_project_root])
-      return retTagFiles
+      return
   endif
- 
+
   let tagImportMode =  g:project_cfg[s:key_tag_import_mode]
-  if tagImportMode != "root" && 
-  \  tagImportMode != "include" && 
+  if tagImportMode != "include" &&
   \  tagImportMode != "exclude"
-     let tagImportMode = "root"
-     let g:project_cfg[s:key_tag_import_mode] = tagImportMode
-  endif
-
-  let tagPath = g:project_cfg[s:key_tag_path]
-  let tagName = g:project_cfg[s:key_tag_prefix_name]
-  let tagPathNameAll = tagPath.'/'.tagName."_all"
-
-  if tagImportMode == "root" 
-      if (!filereadable(tagPathNameAll) || a:isForced)
-        call s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root])
-      endif
-      call add(retTagFiles, tagPathNameAll)
-      call add(g:tag_folders, "root")
-      return retTagFiles 
+     let g:project_cfg[s:key_tag_import_mode] = "include"
+     let g:project_cfg[s:key_tag_folders] = "."
   endif
 
   if tagImportMode == "include"
     let tagFolders = []
+    let hasRoot = 0
     if has_key(g:project_cfg, s:key_tag_folders)
-      if (stridx(g:project_cfg[s:key_tag_folders], ',') == -1)
-        if g:project_cfg[s:key_tag_folders] == "."
-          call add(tagFolders, "root")
-        else
-          let tempFolder =  g:project_cfg[s:key_project_root].'/'.g:project_cfg[s:key_tag_folders]
-          if isdirectory(tempFolder)
-            call add(tagFolders, g:project_cfg[s:key_tag_folders])
-          endif
-        endif
-      else
-        let tagFolders = split(g:project_cfg[s:key_tag_folders], ",")
-      endif
+      let tagFolders = split(g:project_cfg[s:key_tag_folders], ",")
 
       let i = 0
       while i < len(tagFolders)
         let tagFolder = s:stripspaces(tagFolders[i])
-        if tagFolder == "root"
-          call remove(g:tag_folders, 0) 
-          call remove(retTagFiles, 0)
-          call add(g:tag_folders, "root")
-          call add(retTagFiles, tagPathNameAll)
-          return retTagFiles
-        endif
-        
-        if isdirectory(g:project_cfg[s:key_project_root].'/'.tagFolder)
-          let tagPath = g:project_cfg[s:key_tag_path]
-          let tailName = tagFolder
-          if (stridx(tailName, '/') != -1)
-            let g:tail_name_number = g:tail_name_number + 1
-            let tailName = g:tail_name_number
-          endif
-          
-          let subTagPathName = tagPath.'/'.tagName.'_'.tailName
-          if !filereadable(subTagPathName) || a:isForced
-            call s:makeTag(subTagPathName, g:project_cfg[s:key_project_root].'/'.tagFolder)
-          endif 
-          call add(g:tag_folders, tagFolder)
-          call add(retTagFiles, subTagPathName)
+        if tagFolder =~ "^\.:.*" || tagFolder == "."
+           let hasRoot = 1
+           break
         endif
         let i = i + 1
       endwhile
+
+      if hasRoot
+        call s:makeFolderTagWithTypes(a:isForced, tagFolders[i])
+        return
+      else
+         call add(g:tag_folders, "allfolders")
+      endif
+
+      let i = 0
+      while i < len(tagFolders)
+        call s:makeFolderTagWithTypes(a:isForced, tagFolders[i])
+        let i = i + 1
+      endwhile
     endif
-    return retTagFiles
   endif
 
   if tagImportMode == "exclude"
     if has_key(g:project_cfg, s:key_tag_exclude_folders)
       if (g:project_cfg[s:key_tag_exclude_folders] == ".")
-        return []
+        return
       endif
 
       let excludeFolders = []
@@ -280,45 +470,33 @@ function! s:makeAllProjectTags(isForced)
 
       let underProjectDirsOrig = system('ls -d */')
       let underProjectDirs = split(underProjectDirsOrig, "\n")
-    
+
       for dir in underProjectDirs
         let underProjectDir = s:stripnewlines(dir)
         if len(underProjectDir) >= 2
           let underProjectDir = underProjectDir[0: len(underProjectDir)-2]
         endif
         if index(excludeFolders, underProjectDir) == -1
-          let subTagPathName = g:project_cfg[s:key_tag_path].'/'.tagName.'_'.underProjectDir
-          if !filereadable(subTagPathName) || a:isForced
-            call s:makeTag(subTagPathName, g:project_cfg[s:key_project_root].'/'.underProjectDir)
-          endif
-          call add(retTagFiles, underProjectDir.'/'.tagName)
+          call s:makeFolderTagWithTypes(a:isForced, underProjectDir.":".s:cplusplus)
         endif
       endfor
     endif
-    return retTagFiles
   endif
-
 endfunction
 
 "Generate all external folders tags
 function! s:makeAllExternalTags(isForced)
-  let retSetTagsCmd = ','
   for externalFolder in g:external_folders
     let index = 0
     if isdirectory(externalFolder)
       let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
                              \ .g:project_cfg[s:key_external_tag_prefix_name]
                              \ .'_external'.index
-      if !filereadable(externalTagPathName) || a:isForced
-        call s:makeTag(externalTagPathName, externalFolder)
-      endif
+        let retExternalTagNames = s:makeTag(externalTagPathName, externalFolder, 0x01, a:isForce)
+        let g:external_tagfolder_tagfile_map[externalTagFolder] = retExternalTagNames
       let index = index + 1
-      let retSetTagsCmd .= ','
-      let retSetTagsCmd .= externalTagPathName
     endif
   endfor
-
-  return retSetTagsCmd
 endfunction
 
 "Set tags file
@@ -327,21 +505,48 @@ function! s:setTags()
     return s:error_list["NOT_PROJECT"]
   endif
 
-  let tagFiles = s:makeAllProjectTags(0)
+  let projectsTagFiles = values(g:tag_folder_tagfile_map)
   let setTagsCmd = 'set tags='
-  for tagFile in tagFiles
+  for tagFiles in projectsTagFiles
     let i = 0
-    if filereadable(tagFile)
-      let setTagsCmd .= tagFile
-      if i != (len(tagFiles) - 1)
-        let setTagsCmd .= ','
+    let j = 0
+    let theLastGroup = g:FALSE
+    for tagFile in tagFiles
+      if filereadable(tagFile)
+        let setTagsCmd .= tagFile
+        if !theLastGroup || i != (len(tagFiles) - 1)
+          let setTagsCmd .= ','
+        endif
       endif
+      let i += 1
+    endfor
+    let j += 1
+    if (j == len(projectsTagFiles) - 1)
+      let theLastGroup = g:TRUE
     endif
-    let i = i + 1
   endfor
 
-  let setTagsCmd .=  s:makeAllExternalTags(0)
-  exe setTagsCmd
+  let externalTagFiles = values(g:external_tagfolder_tagfile_map)
+  for tagFiles in externalTagFiles
+    let i = 0
+    let j = 0
+    let theLastGroup = g:FALSE
+    for tagFile in tagFiles
+      if filereadable(tagFile)
+        let setTagsCmd .= tagFile
+        if !theLastGroup || i != (len(tagFiles) - 1)
+          let setTagsCmd .= ','
+        endif
+      endif
+      let i += 1
+    endfor
+    let j += 1
+    if (j == len(externalTagFiles) - 1)
+      let theLastGroup = g:TRUE
+    endif
+  endfor
+
+  exec setTagsCmd
 
   return s:error_list["OK"]
 endfunction
@@ -358,12 +563,11 @@ function! s:makeProjectTags(...)
         continue
       endif
       let tagDir = g:tag_folders[str2nr(a:000[i])]
-      if tagDir == "root" || tagDir == "allfolders"
+      if tagDir == "allfolders" || tagDir =~ "root.*"
         call s:makeAllProjectTags(1)
         break
-      elseif isdirectory(g:project_cfg[s:key_project_root].'/'.tagDir)
-        let subTagPathName = g:project_cfg[s:key_tag_path].'/'.g:project_cfg[s:key_tag_prefix_name].'_'.tagDir
-        call s:makeTag(subTagPathName, g:project_cfg[s:key_project_root].'/'.tagDir)
+      else
+       call s:makeFolderTagWithTypes(1, tagDir)
       endif
 
       let i = i + 1
@@ -387,10 +591,10 @@ function! s:makeExternalProjectTags(...)
   if len(a:000)
     let i = 0
     while i < len(a:000)
-      if match(a:000[i], '\d\+') == -1 || 
+      if match(a:000[i], '\d\+') == -1 ||
       \  str2nr(a:000[i]) < 0 ||
       \  str2nr(a:000[i]) >= len(g:external_folders)
-        let i = i + 1 
+        let i = i + 1
         continue
       endif
       let externalTagPathName = g:project_cfg[s:key_tag_path].
@@ -398,13 +602,13 @@ function! s:makeExternalProjectTags(...)
       \                         'external'.i
       let extDir = g:external_folders[str2nr(a:000[i])]
       if isdirectory(extDir)
-        call s:makeTag(externalTagPathName, extDir) 
+        call s:makeTag(externalTagPathName, extDir, 0x01, str2nr(a:000[i]))
       endif
-      let i = i + 1 
+      let i = i + 1
     endwhile
   else
     for externalFolder in g:external_folders
-      call s:makeAllExternalTags(1) 
+      call s:makeAllExternalTags(1)
     endfor
   endif
 endfunction
@@ -462,13 +666,13 @@ function! s:setBookmarksPath()
     return s:error_list["NOT_PROJECT"]
   endif
 
-  let bookmarksPath = g:project_cfg[s:key_project_root].'/' 
+  let bookmarksPath = g:project_cfg[s:key_project_root].'/'
                     \ .g:project_cfg[s:key_project_cfg_folder]
   let bookmarksName = g:project_cfg[s:key_bookmarks_name]
 
   if isdirectory(g:project_cfg[s:key_bookmarks_path]) &&
    \ g:project_cfg[s:key_bookmarks_path] != "."
-     let bookmarksPath = g:project_cfg[s:key_bookmarks_path] 
+     let bookmarksPath = g:project_cfg[s:key_bookmarks_path]
   endif
 
   " This value will work when there is vbookmark
@@ -482,18 +686,18 @@ function! s:setNERDTreeBookmarksPath()
     return s:error_list["NOT_PROJECT"]
   endif
 
-  let bookmarksPath = g:project_cfg[s:key_project_root].'/' 
+  let bookmarksPath = g:project_cfg[s:key_project_root].'/'
                     \ .g:project_cfg[s:key_project_cfg_folder]
   if isdirectory(g:project_cfg[s:key_NERDTreeBookmarks_path]) &&
    \ g:project_cfg[s:key_bookmarks_path] != "."
-     let bookmarksPath = g:project_cfg[s:key_NERDTreeBookmarks_path] 
+     let bookmarksPath = g:project_cfg[s:key_NERDTreeBookmarks_path]
   endif
   let bookmarksName = g:project_cfg[s:key_NERDTreeBookmarks_name]
   let g:NERDTreeBookmarksFile =  bookmarksPath . '/' . bookmarksName
   return g:NERDTreeBookmarksFile
 endfunction
 
-"Generate set includes command for current project 
+"Generate set includes command for current project
 function! s:generateIncludesCmd(initialCmd, keyProjectDir, keyIncludes)
   let setIncludesCmd = a:initialCmd
   if has_key(g:project_cfg, a:keyIncludes)
@@ -537,9 +741,9 @@ function! s:setIncludes()
       if strlen(setIncludesCmd) > strlen(s:setIncludesCmdStart)
         let setIncludesCmd .= ','
       endif
-      let externalIncludes = split(g:project_cfg[s:key_external_includes], ',') 
+      let externalIncludes = split(g:project_cfg[s:key_external_includes], ',')
       let i = 0
-      while i < len(externalIncludes) 
+      while i < len(externalIncludes)
         if i != len(externalIncludes) - 1
           if isdirectory(externalIncludes[i])
             let setIncludesCmd .= externalIncludes[i]
@@ -582,14 +786,44 @@ function Chw(...)
   return s:error_list["OK"]
 endfunction
 
+function! s:addPTagFolders(...)
+  if len(a:000)
+    let i = 0
+    while i < len(a:000)
+      call s:makeFolderTagWithTypes(a:000[i])
+      let i += 1
+    endwhile
+  endif
+endfunction
+
+" Delete tag from list.
+function! s:delPTagFolders(...)
+  if len(a:000)
+    let i = 0
+    while i < len(a:000)
+      let index = str2nr(a:000[i]
+      if index < len(g:tag_folders)
+        let folderAndTypes = split(g:tag_folders[index], ":")
+        if folderAndTypes[0] != "allfolders"
+          call remove(g:tag_folder_tagfile_map, folderAndTypes[0])
+          call setTags()
+        endif
+      endif
+      let i += 1
+    endwhile
+  endif
+endfunction
+
 "Call
 let retStatus = s:loadProjectCfg()
 if retStatus  == s:error_list["OK"]
+  call s:makeAllProjectTags(0)
+  call s:makeAllExternalTags(0)
   call s:setTags()
   call s:setBookmarksPath()
   call s:setNERDTreeBookmarksPath()
   call s:setIncludes()
-else 
+else
   " This value will work when there is vbookmark
   "let g:vbookmark_bookmarkSaveFile = "/home/broton/.vim/.bookmarks"
   let g:vbookmark_bookmarkSaveFile = $HOME . "/.bookmarks"
@@ -630,3 +864,10 @@ if !exists(':ListPFolders') && has_key(g:project_cfg, s:key_project_root)
   nnoremap <silent> lst :ListPFolders<CR>
 endif
 
+if !exists(':AddPTagFolders') && has_key(g:project_cfg, s:key_project_root)
+  command -nargs=* AddPTagFolders :silent call s:addPTagFolders(<f-args>)
+endif
+
+if !exists(':DelPTagFolders') && has_key(g:project_cfg, s:key_project_root)
+  command -nargs=* DelPTagFolders :silent call s:delPTagFolders(<f-args>)
+endif
