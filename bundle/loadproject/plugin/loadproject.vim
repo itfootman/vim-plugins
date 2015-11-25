@@ -8,7 +8,7 @@ if exists("loaded_LoadTags")
 endif
 let loaded_LoadTags = 1
 
-let s:error_list = {"OK":0,"INVALID_PATH":-1,"NOT_PROJECT":-2}
+let s:error_list = {"OK":0,"INVALID_PATH":-1,"NOT_PROJECT":-2, "INVALID_FOLDER_TYPE":-3, "INVALID_PARAMETER":-4}
 let s:project_cfg_name = ".projectcfg"
 let s:key_project_root = "projectRoot"
 let s:key_tag_path = "tagPath"
@@ -323,6 +323,7 @@ endfunction
 "Calculate project types
 function! s:calculateProjectTypes(folderTypes)
   let maskFolderTypes = 0x00
+  let retVal = []
 
   let lstFolderTypes = split(a:folderTypes, "|")
   for folderType in lstFolderTypes
@@ -333,15 +334,20 @@ function! s:calculateProjectTypes(folderTypes)
     elseif folderType == s:js
       let maskFolderTypes += s:folder_type_js
     else
-      echomsg "error type, do nothing."
+      let maskFolderTypes += 0x00
     endif
   endfor
 
+  call add(retVal, maskFolderTypes)
+
   if maskFolderTypes == 0x00
     let maskFolderTypes = s:folder_type_cplusplus
+    call add(retVal, s:error_list["INVALID_FOLDER_TYPE"])
+  else
+    call add(retVal, s:error_list["OK"])
   endif
 
-  return maskFolderTypes
+  return retVal
 endfunction
 
 "Todo end with /
@@ -358,12 +364,23 @@ function! s:generateTagPrefixNameWithFolder(folderName)
     return retTagNamePrix
 endfunction
 
+function! s:listHasValue(list, toFind)
+  for value in a:list
+    if (value == a:toFind)
+      return g:TRUE
+    endif
+  endfor
+
+  return g:FALSE
+endfunction
+
 "Make tags of a folder with types
 function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
+  let status = s:error_list['OK']
   let folderAndStrTypes = split(a:folderWithTypes, ":")
 
   if empty(folderAndStrTypes)
-    return
+    return s:error_list['INVALID_PARAMETER']
   endif
 
   let tagFolder = folderAndStrTypes[0]
@@ -373,7 +390,9 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
     let folderStrTypes = folderAndStrTypes[1]
   endif
 
-  let folderMaskTypes = s:calculateProjectTypes(folderStrTypes)
+  let folderMaskTypesAndRetValue = s:calculateProjectTypes(folderStrTypes)
+  let folderMaskTypes = folderMaskTypesAndRetValue[0]
+  let status = folderMaskTypesAndRetValue[1]
 
   if tagFolder == "."
     let tagPath = g:project_cfg[s:key_tag_path]
@@ -383,32 +402,52 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
     let retFolderTagNames = s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root], folderMaskTypes, a:isForced)
     if len(folderAndStrTypes) > 1
       if a:isForced == 0
-        let tmpIndex = 'root:'.folderAndStrTypes[1]
-        let g:tag_folder_tagfile_map[tmpIndex] = retFolderTagNames
-        call add(g:tag_folders, tmpIndex)
+        let tmpIndex = 'root:cplusplus'
+
+        if status != s:error_list["INVALID_FOLDER_TYPE"]
+          let tmpIndex = 'root:'.folderAndStrTypes[1]
+        endif
+
+        if !s:listHasValue(g:tag_folders,tmpIndex)
+          let g:tag_folder_tagfile_map[tmpIndex] = retFolderTagNames
+          call add(g:tag_folders, tmpIndex)
+        endif
+
       endif
     else
       if a:isForced == 0
-        let g:tag_folder_tagfile_map['root'] = retFolderTagNames
-        call add(g:tag_folders, "root")
+        if !s:listHasValue(g:tag_folders, "root")
+          let g:tag_folder_tagfile_map['root'] = retFolderTagNames
+          call add(g:tag_folders, "root")
+        endif
       endif
     endif
-    return
-  endif
-
-  let fullTagFolderPath = g:project_cfg[s:key_project_root].'/'.tagFolder
-  let retFolderTagNames = []
-  if isdirectory(fullTagFolderPath)
-    let tagPath = g:project_cfg[s:key_tag_path]
-    let tagName = g:project_cfg[s:key_tag_prefix_name]
-    let tagPrefixName = s:generateTagPrefixNameWithFolder(tagFolder)
-    let tagPathAndName = tagPath.'/'. tagPrefixName . tagName
-    let retFolderTagNames = s:makeTag(tagPathAndName, fullTagFolderPath, folderMaskTypes, a:isForced)
-    if a:isForced == 0
-      call add(g:tag_folders, a:folderWithTypes)
-      let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
+  else
+    let fullTagFolderPath = g:project_cfg[s:key_project_root].'/'.tagFolder
+    let retFolderTagNames = []
+    if isdirectory(fullTagFolderPath)
+      let tagPath = g:project_cfg[s:key_tag_path]
+      let tagName = g:project_cfg[s:key_tag_prefix_name]
+      let tagPrefixName = s:generateTagPrefixNameWithFolder(tagFolder)
+      let tagPathAndName = tagPath.'/'. tagPrefixName . tagName
+      let retFolderTagNames = s:makeTag(tagPathAndName, fullTagFolderPath, folderMaskTypes, a:isForced)
+      if a:isForced == 0
+        if status != s:error_list["INVALID_FOLDER_TYPE"]
+          if !s:listHasValue(g:tag_folders, a:folderWithTypes)
+            call add(g:tag_folders, a:folderWithTypes)
+            let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
+          endif
+        else
+          if !s:listHasValue(a:folderWithTypes)
+            call add(g:tag_folders, tagFolder.":cplusplus")
+            let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
+          endif
+        endif
+      endif
     endif
   endif
+
+  return status
 endfunction
 
 "Make tags of folders
@@ -553,6 +592,7 @@ endfunction
 
 "Generate tags for some folders
 function! s:makeProjectTags(...)
+  let isAllFolder = g:FALSE
   if len(a:000)
     let i = 0
     while i < len(a:000)
@@ -563,17 +603,34 @@ function! s:makeProjectTags(...)
         continue
       endif
       let tagDir = g:tag_folders[str2nr(a:000[i])]
-      if tagDir == "allfolders" || tagDir =~ "root.*"
-        call s:makeAllProjectTags(1)
+      if tagDir == "allfolders"
+        let isAllFolder = g:TRUE
         break
       else
-       call s:makeFolderTagWithTypes(1, tagDir)
+        if tagDir =~ "root.*"
+          let tagDir = '.'
+        endif
+        call s:makeFolderTagWithTypes(g:TRUE, tagDir)
       endif
 
       let i = i + 1
     endwhile
   else
-      call s:makeAllProjectTags(1)
+      let isAllFolder = g:TRUE
+  endif
+
+  if isAllFolder
+    for eachFolder in g:tag_folders
+      if eachFolder == "allfolders"
+        continue
+      endif
+
+      if eachFolder =~"root.*"
+        let eachFolder = '.'
+      endif
+
+      call s:makeFolderTagWithTypes(g:TRUE, eachFolder)
+    endfor
   endif
 endfunction
 
@@ -790,9 +847,10 @@ function! s:addPTagFolders(...)
   if len(a:000)
     let i = 0
     while i < len(a:000)
-      call s:makeFolderTagWithTypes(a:000[i])
+      call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
       let i += 1
     endwhile
+    call s:setTags()
   endif
 endfunction
 
@@ -801,12 +859,13 @@ function! s:delPTagFolders(...)
   if len(a:000)
     let i = 0
     while i < len(a:000)
-      let index = str2nr(a:000[i]
+      let index = str2nr(a:000[i])
       if index < len(g:tag_folders)
         let folderAndTypes = split(g:tag_folders[index], ":")
         if folderAndTypes[0] != "allfolders"
+          call remove(g:tag_folders, index)
           call remove(g:tag_folder_tagfile_map, folderAndTypes[0])
-          call setTags()
+          call s:setTags()
         endif
       endif
       let i += 1

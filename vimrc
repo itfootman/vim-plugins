@@ -38,7 +38,8 @@ set runtimepath^=~/.vim/bundle/vim-colors-solarized,
                \~/.vim/bundle/tagbar,
                \~/.vim/bundle/neocomplcache.vim,
                \~/.vim/bundle/LeaderF,
-               \~/.vim/bundle/OmniCppComplete
+               \~/.vim/bundle/OmniCppComplete,
+               \~/.vim/bundle/command-t
 
 if !has("gui_running")
   if $TERM_NAME  == "konsole"
@@ -100,6 +101,8 @@ let g:miniBufExplMapCTabSwitchBufs = 1 " 供过tab切换窗口（这个好像没
 let g:miniBufExplMapWindowNavVim = 1 " 通过h,j,k,l切换窗口
 let g:miniBufExplMapWindowNavArrows = 1 " 通过方向键切换窗口
 let g:bufExplorerSortBy='mru'
+
+let g:CommandTMaxFiles=100000
 
 ""let Tlist_Show_One_File=1 " 仅显示当前文件的tags目录
 ""let Tlist_Exit_OnlyWindow=1 " 当仅剩下taglist窗口的时候启动关闭
@@ -174,7 +177,7 @@ endfunction
 if has("autocmd")
    autocmd BufRead *.txt set tw=78
    "autocmd BufEnter * call <SID>ShowTabSpace()
-   autocmd BufEnter * call <SID>PlaceBookmarks()
+   "autocmd BufEnter * call <SID>PlaceBookmarks()
    autocmd BufReadPost * if line("'\"") > 0 && line ("'\"") <= line("$") | exe "normal g'\"" |  endif
 endif
 
