@@ -492,8 +492,8 @@ function! s:makeAllExternalTags(isForced)
       let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
                              \ .g:project_cfg[s:key_external_tag_prefix_name]
                              \ .'_external'.index
-        let retExternalTagNames = s:makeTag(externalTagPathName, externalFolder, 0x01, a:isForce)
-        let g:external_tagfolder_tagfile_map[externalTagFolder] = retExternalTagNames
+        let retExternalTagNames = s:makeTag(externalTagPathName, externalFolder, 0x01, a:isForced)
+        let g:external_tagfolder_tagfile_map[externalFolder] = retExternalTagNames
       let index = index + 1
     endif
   endfor
