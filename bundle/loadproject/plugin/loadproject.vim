@@ -403,7 +403,7 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
   if tagFolder == "."
     let tagPath = g:project_cfg[s:key_tag_path]
     let tagName = g:project_cfg[s:key_tag_prefix_name]
-    let tagPathNameAll = tagPath.'/'. "all" . "_" . tagName
+    let tagPathNameAll = tagPath.'/'.tagName.s:delimiter."all"
 
     let retFolderTagNames = s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root], folderMaskTypes, a:isForced)
     if len(folderAndStrTypes) > 1
