@@ -338,12 +338,12 @@ function! s:calculateProjectTypes(folderTypes)
     endif
   endfor
 
-  call add(retVal, maskFolderTypes)
-
   if maskFolderTypes == 0x00
     let maskFolderTypes = s:folder_type_cplusplus
+    call add(retVal, maskFolderTypes)
     call add(retVal, s:error_list["INVALID_FOLDER_TYPE"])
   else
+    call add(retVal, maskFolderTypes)
     call add(retVal, s:error_list["OK"])
   endif
 
@@ -528,10 +528,19 @@ function! s:makeAllExternalTags(isForced)
   for externalFolder in g:external_folders
     let index = 0
     if isdirectory(externalFolder)
+      let folderAndStrTypes = split(externalFolder)
+      let strTypes = s:cplusplus
+      if len(folderAndStrTypes) > 1
+        let strTypes = folderAndStrTypes[1]
+      endif
+
+      let maskFolderTypesAndRetValue = s:calculateProjectTypes(strTypes)
+      let maskFolderTypes = maskFolderTypesAndRetValue[0]
+      let tagAppendixName = s:generateTagPrefixNameWithFolder(externalFolder)
       let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
                              \ .g:project_cfg[s:key_external_tag_prefix_name]
-                             \ .'_external'.index
-        let retExternalTagNames = s:makeTag(externalTagPathName, externalFolder, 0x01, a:isForced)
+                             \ .'_external'.index.tagAppendixName
+        let retExternalTagNames = s:makeTag(externalTagPathName, externalFolder, maskFolderTypes, a:isForced)
         let g:external_tagfolder_tagfile_map[externalFolder] = retExternalTagNames
       let index = index + 1
     endif
