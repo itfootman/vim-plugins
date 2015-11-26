@@ -354,11 +354,17 @@ endfunction
 function! s:generateTagPrefixNameWithFolder(folderName)
     let folderNodes = split(a:folderName, "/")
     let retTagNamePrix = ''
+    let i = 0
     for folderNode in folderNodes
       let folderNode = s:stripspaces(folderNode)
       if (!empty(folderNode))
-        let retTagNamePrix .= (folderNode . '_')
+        if i != len(folderNodes)-1
+          let retTagNamePrix .= (folderNode . '_')
+        else
+          let retTagNamePrix .= folderNode 
+        endif
       endif
+      let i += 1
     endfor
 
     return retTagNamePrix
@@ -428,8 +434,8 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
     if isdirectory(fullTagFolderPath)
       let tagPath = g:project_cfg[s:key_tag_path]
       let tagName = g:project_cfg[s:key_tag_prefix_name]
-      let tagPrefixName = s:generateTagPrefixNameWithFolder(tagFolder)
-      let tagPathAndName = tagPath.'/'. tagPrefixName . tagName
+      let tagAppendixName = s:generateTagPrefixNameWithFolder(tagFolder)
+      let tagPathAndName = tagPath.'/'. tagName . s:delimiter . tagAppendixName
       let retFolderTagNames = s:makeTag(tagPathAndName, fullTagFolderPath, folderMaskTypes, a:isForced)
       if a:isForced == 0
         if status != s:error_list["INVALID_FOLDER_TYPE"]
@@ -539,7 +545,7 @@ function! s:makeAllExternalTags(isForced)
       let tagAppendixName = s:generateTagPrefixNameWithFolder(externalFolder)
       let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
                              \ .g:project_cfg[s:key_external_tag_prefix_name]
-                             \ .'_external'.index.tagAppendixName
+                             \ .'_external'.index.s:delimiter.tagAppendixName
         let retExternalTagNames = s:makeTag(externalTagPathName, externalFolder, maskFolderTypes, a:isForced)
         let g:external_tagfolder_tagfile_map[externalFolder] = retExternalTagNames
       let index = index + 1
