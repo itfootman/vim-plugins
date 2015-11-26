@@ -873,16 +873,22 @@ endfunction
 function! s:delPTagFolders(...)
   if len(a:000)
     let i = 0
+    let index = str2nr(a:000[i])
     while i < len(a:000)
-      let index = str2nr(a:000[i])
-      if index < len(g:tag_folders)
-        let folderAndTypes = split(g:tag_folders[index], ":")
-        if folderAndTypes[0] != "allfolders"
-          call remove(g:tag_folders, index)
-          call remove(g:tag_folder_tagfile_map, folderAndTypes[0])
-          call s:setTags()
-        endif
+      if match(a:000[i], '\d\+') == -1 ||
+      \  index < 0 ||
+      \  index >= len(g:external_folders)
+        let i = i + 1
+        continue
       endif
+
+      let folderAndTypes = split(g:tag_folders[index], ":")
+      if folderAndTypes[0] != "allfolders"
+        call remove(g:tag_folders, index)
+        call remove(g:tag_folder_tagfile_map, folderAndTypes[0])
+        call s:setTags()
+      endif
+
       let i += 1
     endwhile
   endif
