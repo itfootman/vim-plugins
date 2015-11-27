@@ -858,10 +858,35 @@ function Chw(...)
   return s:error_list["OK"]
 endfunction
 
+function! s:checkFolderTypes(folderWithTypes)
+  let folderAndStrTypes = split(a:folderWithTypes, ':')
+  let folderStrTypes = s:cplusplus
+
+  if len(folderAndStrTypes) > 1
+    let folderStrTypes = folderAndStrTypes[1]
+  endif
+
+  let strTypes = split(folderStrTypes, '|')
+  
+  for strType in strTypes
+    if strType != s:cplusplus ||
+    \  strType != s:java ||
+    \  strType != s:js
+      return g:FALSE
+    endif
+  endfor
+
+  return g:TRUE
+endfunction
+
 function! s:addPTagFolders(...)
   if len(a:000)
     let i = 0
     while i < len(a:000)
+      if !s:checkFolderTypes(a:000[i])
+        echomsg "There are invalid folder types in your input, the folder is not added."
+        return
+      endif
       call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
       let i += 1
     endwhile
