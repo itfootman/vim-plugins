@@ -882,8 +882,8 @@ function! s:checkFolderTypes(folderWithTypes)
   let strTypes = split(folderStrTypes, '|')
   
   for strType in strTypes
-    if strType != s:cplusplus ||
-    \  strType != s:java ||
+    if strType != s:cplusplus &&
+    \  strType != s:java && 
     \  strType != s:js
       return g:FALSE
     endif
