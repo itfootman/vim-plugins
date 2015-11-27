@@ -332,31 +332,44 @@ function! s:calculateProjectTypes(folderTypes)
   let retStatus = s:error_list["OK"]
 
   let lstFolderTypes = split(a:folderTypes, "|")
+  let i = 0
+  let findValid = g:TRUE
   for folderType in lstFolderTypes
     if folderType == s:cplusplus
+      let findValid = g:TRUE
       let maskFolderTypes += s:folder_type_cplusplus
       let finalStrTypes .= s:cplusplus
     elseif folderType == s:java
+      let findValid = g:TRUE
       let maskFolderTypes += s:folder_type_java
-      let finalStrTypes .= '|'.s:java
+      let finalStrTypes .= s:java
     elseif folderType == s:js
+      let findValid = g:TRUE
       let maskFolderTypes += s:folder_type_js
-      let finalStrTypes .= '|'.s:js
+      let finalStrTypes .= s:js
     else
+      let findValid = g:FALSE
       let maskFolderTypes += 0x00
       let retStatus = s:error_list["HAS_INVALID_FOLDER_TYPE"]
     endif
+
+    if i != len(lstFolderTypes)-1 && findValid
+      let finalStrTypes .= '|'
+    endif
+    let i += 1
   endfor
 
   if maskFolderTypes == 0x00
     let maskFolderTypes = s:folder_type_cplusplus
     let finalStrTypes = s:cplusplus
     let retStatus = s:error_list["ALL_INVALID_FOLDER_TYPE"]
-    call add(retVal, maskFolderTypes)
   else
-    call add(retVal, maskFolderTypes)
+    if !findValid
+      let finalStrTypes = strpart(finalStrTypes, 0, strlen(finalStrTypes)-1)
+    endif
   endif
 
+  call add(retVal, maskFolderTypes)
   call add(retVal, retStatus)
   call add(retVal, finalStrTypes)
 
