@@ -905,6 +905,8 @@ function! s:addPTagFolders(...)
           echomsg ''  
           return
         endif
+      else
+        call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
       endif
       let i += 1
     endwhile
