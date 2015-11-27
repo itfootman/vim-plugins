@@ -8,7 +8,11 @@ if exists("loaded_LoadTags")
 endif
 let loaded_LoadTags = 1
 
-let s:error_list = {"OK":0,"INVALID_PATH":-1,"NOT_PROJECT":-2, "INVALID_FOLDER_TYPE":-3, "INVALID_PARAMETER":-4}
+let s:error_list = {"OK":0,
+                   \"INVALID_PATH":-1,"NOT_PROJECT":-2,
+                   \"ALL_INVALID_FOLDER_TYPE":-3,
+                   \"HAS_INVALID_FOLDER_TYPE":-4,
+                   \"INVALID_PARAMETER":-5}
 let s:project_cfg_name = ".projectcfg"
 let s:key_project_root = "projectRoot"
 let s:key_tag_path = "tagPath"
@@ -324,28 +328,37 @@ endfunction
 function! s:calculateProjectTypes(folderTypes)
   let maskFolderTypes = 0x00
   let retVal = []
+  let finalStrTypes = '' 
+  let retStatus = s:error_list["OK"]
 
   let lstFolderTypes = split(a:folderTypes, "|")
   for folderType in lstFolderTypes
     if folderType == s:cplusplus
       let maskFolderTypes += s:folder_type_cplusplus
+      let finalStrTypes .= s:cplusplus
     elseif folderType == s:java
       let maskFolderTypes += s:folder_type_java
+      let finalStrTypes .= '|'.s:java
     elseif folderType == s:js
       let maskFolderTypes += s:folder_type_js
+      let finalStrTypes .= '|'.s:js
     else
       let maskFolderTypes += 0x00
+      let retStatus = s:error_list["HAS_INVALID_FOLDER_TYPE"]
     endif
   endfor
 
   if maskFolderTypes == 0x00
     let maskFolderTypes = s:folder_type_cplusplus
+    let finalStrTypes = s:cplusplus
+    let retStatus = s:error_list["ALL_INVALID_FOLDER_TYPE"]
     call add(retVal, maskFolderTypes)
-    call add(retVal, s:error_list["INVALID_FOLDER_TYPE"])
   else
     call add(retVal, maskFolderTypes)
-    call add(retVal, s:error_list["OK"])
   endif
+
+  call add(retVal, retStatus)
+  call add(retVal, finalStrTypes)
 
   return retVal
 endfunction
@@ -399,6 +412,7 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
   let folderMaskTypesAndRetValue = s:calculateProjectTypes(folderStrTypes)
   let folderMaskTypes = folderMaskTypesAndRetValue[0]
   let status = folderMaskTypesAndRetValue[1]
+  let finalStrTypes = folderMaskTypesAndRetValue[2]
 
   if tagFolder == "."
     let tagPath = g:project_cfg[s:key_tag_path]
@@ -408,12 +422,7 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
     let retFolderTagNames = s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root], folderMaskTypes, a:isForced)
     if len(folderAndStrTypes) > 1
       if a:isForced == 0
-        let tmpIndex = 'root:cplusplus'
-
-        if status != s:error_list["INVALID_FOLDER_TYPE"]
-          let tmpIndex = 'root:'.folderAndStrTypes[1]
-        endif
-
+        let tmpIndex = 'root:'. finalStrTypes
         if !s:listHasValue(g:tag_folders,tmpIndex)
           let g:tag_folder_tagfile_map[tmpIndex] = retFolderTagNames
           call add(g:tag_folders, tmpIndex)
@@ -438,17 +447,8 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
       let tagPathAndName = tagPath.'/'. tagName . s:delimiter . tagAppendixName
       let retFolderTagNames = s:makeTag(tagPathAndName, fullTagFolderPath, folderMaskTypes, a:isForced)
       if a:isForced == 0
-        if status != s:error_list["INVALID_FOLDER_TYPE"]
-          if !s:listHasValue(g:tag_folders, a:folderWithTypes)
-            call add(g:tag_folders, a:folderWithTypes)
-            let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
-          endif
-        else
-          if !s:listHasValue(a:folderWithTypes)
-            call add(g:tag_folders, tagFolder.":cplusplus")
-            let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
-          endif
-        endif
+        call add(g:tag_folders, tagFolder.':'.finalStrTypes)
+        let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
       endif
     endif
   endif
@@ -884,13 +884,20 @@ function! s:addPTagFolders(...)
     let i = 0
     while i < len(a:000)
       if !s:checkFolderTypes(a:000[i])
-        echomsg "There are invalid folder types in your input, the folder is not added."
-        return
+        echomsg "There are invalid folder types in your input, do you want to add it continue:y/n?."
+        let c = nr2char(getchar())
+        if c == 'y'
+          call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
+        else
+          echomsg ''  
+          return
+        endif
       endif
-      call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
       let i += 1
     endwhile
     call s:setTags()
+  else
+    echomsg "Please assign your folder..."
   endif
 endfunction
 
