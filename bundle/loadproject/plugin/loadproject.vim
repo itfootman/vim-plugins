@@ -970,9 +970,9 @@ if !exists(':ListPFolders') && has_key(g:project_cfg, s:key_project_root)
 endif
 
 if !exists(':AddPTagFolders') && has_key(g:project_cfg, s:key_project_root)
-  command -nargs=* AddPTagFolders :silent call s:addPTagFolders(<f-args>)
+  command -nargs=* AddPTagFolders :call s:addPTagFolders(<f-args>)
 endif
 
 if !exists(':DelPTagFolders') && has_key(g:project_cfg, s:key_project_root)
-  command -nargs=* DelPTagFolders :silent call s:delPTagFolders(<f-args>)
+  command -nargs=* DelPTagFolders :call s:delPTagFolders(<f-args>)
 endif
