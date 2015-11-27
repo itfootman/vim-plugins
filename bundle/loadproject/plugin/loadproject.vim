@@ -408,8 +408,14 @@ endfunction
 
 "Make tags of a folder with types
 function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
+  let len = strlen(a:folderWithTypes)
+  let folderWithTypes = a:folderWithTypes
+  if strpart(folderWithTypes, len-1, len) == '/'
+    let folderWithTypes = strpart(folderWithTypes, 0, len-1)
+  endif
+
   let status = s:error_list['OK']
-  let folderAndStrTypes = split(a:folderWithTypes, ":")
+  let folderAndStrTypes = split(folderWithTypes, ":")
 
   if empty(folderAndStrTypes)
     return s:error_list['INVALID_PARAMETER']
