@@ -43,7 +43,7 @@ let g:project_cfg = {}
 let g:external_folders = []
 let g:tag_folders = []
 let g:tag_folder_tagfile_map = {}
-let g:external_tagfolder_tagfile_map = {}
+let g:tag_externalfolder_tagfile = {}
 
 let g:project_cfg[s:key_tag_path] = "."
 let g:project_cfg[s:key_tag_prefix_name] = "tags"
@@ -150,24 +150,6 @@ function! s:loadProjectCfg()
      if g:project_cfg[s:key_tag_path] == "."
        let g:project_cfg[s:key_tag_path] = tagPath
      endif
-  endif
-
-  let externalFolders = []
-  if has_key(g:project_cfg, s:key_external_folders)
-    if (stridx(g:project_cfg[s:key_external_folders], ',') == -1)
-      call add(externalFolders, g:project_cfg[s:key_external_folders])
-    else
-      let externalFolders = split(g:project_cfg[s:key_external_folders], ",")
-    endif
-
-    let i = 0
-    while i < len(externalFolders)
-      let externalFolder = s:stripspaces(externalFolders[i])
-      if (isdirectory(externalFolder))
-        call add(g:external_folders, externalFolder)
-      endif
-      let i = i + 1
-    endwhile
   endif
 
   let sessionPath = g:project_cfg[s:key_project_root].'/'
@@ -408,25 +390,37 @@ endfunction
 
 "Make tags of a folder with types
 function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
-  let len = strlen(a:folderWithTypes)
   let folderWithTypes = a:folderWithTypes
-  if strpart(folderWithTypes, len-1, len) == '/'
-    let folderWithTypes = strpart(folderWithTypes, 0, len-1)
-  endif
 
   let status = s:error_list['OK']
   let folderAndStrTypes = split(folderWithTypes, ":")
-
   if empty(folderAndStrTypes)
     return s:error_list['INVALID_PARAMETER']
   endif
 
   let tagFolder = folderAndStrTypes[0]
+
   let folderStrTypes = s:cplusplus
 
   if len(folderAndStrTypes) > 1
     let folderStrTypes = folderAndStrTypes[1]
   endif
+
+  let len = strlen(tagFolder)
+  if strpart(tagFolder, len-1, 1) == '/'
+    let tagFolder = strpart(tagFolder, 0, len-1)
+  endif
+
+  let i = 0
+  for folder in g:tag_folders
+    let tmpFolderAndTypes = split(folder, ':')
+    if tagFolder == tmpFolderAndTypes[0]
+      call remove(g:tag_folders, i)
+      call remove(g:tag_folder_tagfile_map, tagFolder)
+      break
+    endif
+    let i += 1
+  endfor
 
   let folderMaskTypesAndRetValue = s:calculateProjectTypes(folderStrTypes)
   let folderMaskTypes = folderMaskTypesAndRetValue[0]
@@ -441,18 +435,16 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
     let retFolderTagNames = s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root], folderMaskTypes, a:isForced)
     if len(folderAndStrTypes) > 1
       if a:isForced == 0
-        let tmpIndex = 'root:'. finalStrTypes
         if !s:listHasValue(g:tag_folders,tmpIndex)
-          let g:tag_folder_tagfile_map[tmpIndex] = retFolderTagNames
-          call add(g:tag_folders, tmpIndex)
+          let g:tag_folder_tagfile_map['root'] = retFolderTagNames
+          call add(g:tag_folders, 'root'.finalStrTypes)
         endif
-
       endif
     else
       if a:isForced == 0
         if !s:listHasValue(g:tag_folders, "root")
           let g:tag_folder_tagfile_map['root'] = retFolderTagNames
-          call add(g:tag_folders, "root")
+          call add(g:tag_folders, "root".findStrTypes)
         endif
       endif
     endif
@@ -497,7 +489,7 @@ function! s:makeAllProjectTags(isForced)
       let i = 0
       while i < len(tagFolders)
         let tagFolder = s:stripspaces(tagFolders[i])
-        if tagFolder =~ "^\.:.*" || tagFolder == "."
+        if tagFolder =~ '^\.:\?.*'
            let hasRoot = 1
            break
         endif
@@ -548,27 +540,37 @@ function! s:makeAllProjectTags(isForced)
   endif
 endfunction
 
+"Make external folder tag with types
+function! s:addExternalFolderWithTypes(externalFolderWithTypes, isForced)
+  let folderAndStrTypes = split(a:externalFolderWithTypes, ':')
+  let strTypes = s:cplusplus
+  if len(folderAndStrTypes) > 1
+    let strTypes = folderAndStrTypes[1]
+  endif
+
+  if isdirectory(folderAndStrTypes[0])
+    let maskFolderTypesAndRetValue = s:calculateProjectTypes(strTypes)
+    let maskFolderTypes = maskFolderTypesAndRetValue[0]
+    let findStrTypes = maskFolderTypesAndRetValue[2]
+    let tagPrefixName = s:generateTagPrefixNameWithFolder(folderAndStrTypes[0])
+    let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
+                           \ .g:project_cfg[s:key_external_tag_prefix_name]
+                           \ .'_external'.s:delimiter.tagPrefixName
+      let retExternalTagNames = s:makeTag(externalTagPathName, folderAndStrTypes[0], maskFolderTypes, a:isForced)
+      call add(g:external_folders, folderAndStrTypes[0].':'.findStrTypes)
+      let g:tag_externalfolder_tagfile[folderAndStrTypes[0]] = retExternalTagNames
+  endif
+endfunction
+
 "Generate all external folders tags
 function! s:makeAllExternalTags(isForced)
-  for externalFolder in g:external_folders
-    let index = 0
-    if isdirectory(externalFolder)
-      let folderAndStrTypes = split(externalFolder)
-      let strTypes = s:cplusplus
-      if len(folderAndStrTypes) > 1
-        let strTypes = folderAndStrTypes[1]
-      endif
+  let externalFolders = []
+  if has_key(g:project_cfg, s:key_external_folders)
+    let externalFolders = split(g:project_cfg[s:key_external_folders], ",")
+  endif
 
-      let maskFolderTypesAndRetValue = s:calculateProjectTypes(strTypes)
-      let maskFolderTypes = maskFolderTypesAndRetValue[0]
-      let tagAppendixName = s:generateTagPrefixNameWithFolder(externalFolder)
-      let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
-                             \ .g:project_cfg[s:key_external_tag_prefix_name]
-                             \ .'_external'.index.s:delimiter.tagAppendixName
-        let retExternalTagNames = s:makeTag(externalTagPathName, externalFolder, maskFolderTypes, a:isForced)
-        let g:external_tagfolder_tagfile_map[externalFolder] = retExternalTagNames
-      let index = index + 1
-    endif
+  for externalFolderWithTypes in externalFolders
+    call s:addExternalFolderWithTypes(externalFolderWithTypes, a:isForced)
   endfor
 endfunction
 
@@ -599,7 +601,7 @@ function! s:setTags()
     endif
   endfor
 
-  let externalTagFiles = values(g:external_tagfolder_tagfile_map)
+  let externalTagFiles = values(g:tag_externalfolder_tagfile)
   for tagFiles in externalTagFiles
     let i = 0
     let j = 0
@@ -641,7 +643,7 @@ function! s:makeProjectTags(...)
         let isAllFolder = g:TRUE
         break
       else
-        if tagDir =~ "root.*"
+        if tagDir =~ 'root.*'
           let tagDir = '.'
         endif
         call s:makeFolderTagWithTypes(g:TRUE, tagDir)
@@ -659,7 +661,7 @@ function! s:makeProjectTags(...)
         continue
       endif
 
-      if eachFolder =~"root.*"
+      if eachFolder =~ 'root.*'
         let eachFolder = '.'
       endif
 
@@ -688,19 +690,12 @@ function! s:makeExternalProjectTags(...)
         let i = i + 1
         continue
       endif
-      let externalTagPathName = g:project_cfg[s:key_tag_path].
-      \                         g:project_cfg[s:key_external_tag_prefix_name].
-      \                         'external'.i
-      let extDir = g:external_folders[str2nr(a:000[i])]
-      if isdirectory(extDir)
-        call s:makeTag(externalTagPathName, extDir, 0x01, str2nr(a:000[i]))
-      endif
+
+      call s:addExternalFolderWithTypes(g:external_folders[str2nr(a:000[i])], g:TRUE)
       let i = i + 1
     endwhile
   else
-    for externalFolder in g:external_folders
-      call s:makeAllExternalTags(1)
-    endfor
+    call s:makeAllExternalTags(g:TRUE)
   endif
 endfunction
 
@@ -922,29 +917,270 @@ function! s:addPTagFolders(...)
   endif
 endfunction
 
-" Delete tag from list.
+function! s:addETagFolders(...)
+  if len(a:000)
+    let i = 0
+    while i < len(a:000)
+      if !s:checkFolderTypes(a:000[i])
+        echomsg "There are invalid folder types in your input, do you want to add it continue:y/n?."
+        let c = nr2char(getchar())
+        if c == 'y'
+          call s:addExternalFolderWithTypes(g:FALSE, a:000[i])
+        else
+          echomsg ''  
+          return
+        endif
+      else
+        call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
+      endif
+      let i += 1
+    endwhile
+    call s:setTags()
+  else
+    echomsg "Please assign your folder..."
+  endif
+endfunction
+
+" Deleted project tag with key and type
+function! s:delPTagWithKeyAndType(folderIndex, key, type)
+  if !has_key(g:tag_folder_tagfile_map, a:key)
+    return
+  endif
+
+  let outFolderTypes = ''
+  let tagfiles = g:tag_folder_tagfile_map[a:key]
+  let i = 0
+  for tagfile in tagfiles
+    let fileNodes = split(tagfile, s:delimiter)
+    if len(fileNodes) > 1
+      if a:type == fileNodes[-1]
+        call remove(g:tag_folder_tagfile_map[a:key], i)
+        if (empty(g:tag_folder_tagfile_map[a:key]))
+          call remove(g:tag_folder_tagfile_map, a:key)
+        endif
+      endif
+    endif
+    let i+= 1
+  endfor
+
+  if !empty(g:tag_folder_tagfile_map[a:key]) 
+    let tagFolder = g:tag_folders[a:folderIndex]
+      let folderWithTypes = split(tagFolder, ':')
+      if len(folderWithTypes) > 1
+        let folderTypes = split(folderWithTypes[1], '|')
+
+        let i = 0
+        for folderType in folderTypes
+          if folderType == a:type
+            call remove(folderTypes, i)
+            break
+          endif
+          let i+= 1
+        endfor 
+
+        for folderType in folderTypes
+          let outFolderTypes .=  folderType . '|'
+        endfor
+        let outFolderTypes = strpart(outFolderTypes, 0, len(outFolderTypes)-1)
+      endif
+  endif
+
+  return outFolderTypes
+endfunction
+
+" Deleted external tag with key and type
+function! s:delETagWithKeyAndType(key, type)
+  if !has_key(g:tag_externalfolder_tagfile, a:key)
+    return
+  endif
+
+  let tagfiles = g:tag_externalfolder_tagfile[a:key]
+  let i = 0
+  for tagfile in tagfiles
+    let fileNodes = split(tagfile, s:delimiter)
+    if len(fileNodes) > 1
+      if a:type == fileNodes[-1]
+        call remove(g:tag_externalfolder_tagfile[a:key], i)
+        if (empty(g:tag_externalfolder_tagfile[a:key]))
+          call remove(g:tag_externalfolder_tagfile, a:key)
+        endif
+      endif
+    endif
+    let i+= 1
+  endfor
+endfunction
+
+" Delete external folder tags
 function! s:delPTagFolders(...)
   if len(a:000)
     let i = 0
-    let index = str2nr(a:000[i])
+    let folderToRemove = []
     while i < len(a:000)
-      if match(a:000[i], '\d\+') == -1 ||
-      \  index < 0 ||
-      \  index >= len(g:external_folders)
-        let i = i + 1
-        continue
-      endif
+      if a:000[i] =~ '\d\+:\?.*'
+        let indexAndTypes = split(a:000[i], ':')
+        let index = str2nr(indexAndTypes[0])
 
-      let folderAndTypes = split(g:tag_folders[index], ":")
-      if folderAndTypes[0] != "allfolders"
-        call remove(g:tag_folders, index)
-        call remove(g:tag_folder_tagfile_map, folderAndTypes[0])
-        call s:setTags()
-      endif
+        if index >= len(g:tag_folders)
+          let i += 1
+          continue
+        endif
 
-      let i += 1
+        let folderWithTypes = g:tag_folders[index]
+        let folderAndTypes = split(folderWithTypes, ':')
+        let folder = folderAndTypes[0]
+        if folder == "allfolder"
+          if len(g:tag_folders) > 1
+            call remove(g:tag_folders, 1, len(g:tag_folders)-1)
+          endif
+          for key in keys(g:tag_folder_tagfile_map)
+            call remove(g:tag_folder_tagfile_map, key)
+          endfor
+          call s:setTags()
+          return
+        endif
+
+        if len(indexAndTypes) > 1
+          let folderTypes = indexAndTypes[1]
+          let lstTypes = split(folderTypes, '|')
+          for type in lstTypes
+            if type != s:cplusplus &&
+            \ type != s:java &&
+            \ type != s:js
+              continue
+            endif
+            
+            let outFolderTypes = ''
+            if type == s:cplusplus
+              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:plusplus) 
+            endif
+
+            if type == s:java
+              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:java) 
+            endif
+
+            if type == s:js
+              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:js) 
+            endif
+
+            if strlen(outFolderTypes) > 0
+              let g:tag_folders[index] = folder . ':' . outFolderTypes
+            endif
+          endfor
+          if !has_key(g:tag_folder_tagfile_map, folder)
+            call add(folderToRemove, folderWithTypes)
+          endif
+        else
+          call add(folderToRemove, folderWithTypes)
+          if has_key(g:tag_folder_tagfile_map, folder)
+            call remove(g:tag_folder_tagfile_map, folder)
+          endif
+        endif
+      endif
+      let i+= 1
     endwhile
+    
+    for tmpfolderWithTypes in folderToRemove
+      let j = 0
+      for origin in g:tag_folders
+        if tmpfolderWithTypes == g:tag_folders[j]
+          call remove(g:tag_folders, j)
+          break
+        endif
+        let j += 1
+      endfor
+    endfor
+  else
+    if len(g:tag_folders) > 1
+      call remove(g:tag_folders, 1, len(g:tag_folders)-1)
+    endif
+    for key in keys(g:tag_folder_tagfile_map)
+      call remove(g:tag_folder_tagfile_map, key)
+    endfor
   endif
+
+  call s:setTags()
+endfunction
+
+" Delete external folder tags
+function! s:delETagFolders(...)
+  if len(a:000)
+    let indexToRemove = []
+    let i = 0
+    while i < len(a:000)
+      if a:000[i] =~ '\d\+:\?.*'
+        let indexAndTypes = split(a:000[i], ':')
+        let index = str2nr(indexAndTypes[0])
+
+        if index >= len(g:external_folders)
+          let i += 1
+          continue
+        endif
+
+        let externalFolderWithType = g:external_folders[index]
+        let externalFolderAndTypes = split(g:external_folders[index], ':')
+        let externalFolder = externalFolderAndTypes[0]
+
+        if len(indexAndTypes) > 1
+          let folderTypes = indexAndTypes[1]
+          let lstTypes = split(folderTypes, '|')
+          for type in lstTypes
+            if type != s:cplusplus &&
+            \ type != s:java &&
+            \ type != s:js
+              continue
+            endif
+            
+            let outFolderTypes = ''
+            if type == s:cplusplus
+              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:plusplus) 
+            endif
+
+            if type == s:java
+              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:java) 
+            endif
+
+            if type == s:js
+              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:js) 
+            endif
+
+            if strlen(outFolderTypes) > 0
+              let g:tag_external_folders[index] = folder . ':' . outFolderTypes
+            endif
+
+          endfor
+          if !has_key(g:tag_externalfolder_tagfile, externalFolder)
+            call add(indexToRemove, index)
+          endif
+        else
+          call add(indexToRemove, index)
+          if has_key(g:tag_externalfolder_tagfile, externalFolder)
+            call remove(g:tag_externalfolder_tagfile, externalFolder)
+          endif
+        endif
+      endif
+      let i+= 1
+    endwhile
+
+    for tmpfolderWithTypes in folderToRemove
+      let j = 0
+      for origin in g:tag_external_folders
+        if tmpfolderWithTypes == g:tag_external_folders[j]
+          call remove(g:tag_external_folders, j)
+          break
+        endif
+        let j += 1
+      endfor
+    endfor
+  else
+    if len(g:tag_external_folders) > 1
+      call remove(g:tag_external_folders, 0, len(g:tag_external_folders)-1)
+    endif
+    for key in keys(g:tag_externalfolder_tagfile)
+      call remove(g:tag_externalfolder_tagfile, key)
+    endfor
+  endif
+
+  call s:setTags()
 endfunction
 
 "Call
@@ -980,7 +1216,7 @@ if !exists(':RestoreSessionYorN') && has_key(g:project_cfg, s:key_project_root)
 endif
 
 if !exists(':MakePTags') && has_key(g:project_cfg, s:key_project_root)
-  command -nargs=* MakePTags :silent call s:makeProjectTags(<f-args>)
+  command -nargs=* MakePTags :call s:makeProjectTags(<f-args>)
 endif
 
 if !exists(':MakeETags') && has_key(g:project_cfg, s:key_external_folders)
@@ -1003,4 +1239,12 @@ endif
 
 if !exists(':DelPTagFolders') && has_key(g:project_cfg, s:key_project_root)
   command -nargs=* DelPTagFolders :call s:delPTagFolders(<f-args>)
+endif
+
+if !exists(':AddETagFolders') && has_key(g:project_cfg, s:key_project_root)
+  command -nargs=* -complete=dir AddETagFolders :call s:addETagFolders(<f-args>)
+endif
+
+if !exists(':DelETagFolders') && has_key(g:project_cfg, s:key_project_root)
+  command -nargs=* DelETagFolders :call s:delETagFolders(<f-args>)
 endif
