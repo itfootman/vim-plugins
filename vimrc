@@ -54,6 +54,10 @@ if !has("gui_running")
     set t_Co=256
     set background=dark
     colorscheme wombat256mod
+  else
+    set t_Co=256
+    set background=dark
+    colorscheme wombat256mod
 endif
  
 "  set background=light
@@ -177,7 +181,6 @@ endfunction
 if has("autocmd")
    autocmd BufRead *.txt set tw=78
    "autocmd BufEnter * call <SID>ShowTabSpace()
-   "autocmd BufEnter * call <SID>PlaceBookmarks()
    autocmd BufReadPost * if line("'\"") > 0 && line ("'\"") <= line("$") | exe "normal g'\"" |  endif
 endif
 
@@ -199,10 +202,12 @@ nmap <C-F4> :pclose<CR>
 nmap <C-S-y> :redo<CR>
 "map <F9> :NERDTreeToggle<cr>
 map <F3> :WMToggle<cr>
-nmap <C-F7> :VbookmarkGroup<CR>
+nmap lsm :VbookmarkGroup<CR>
 nmap <C-F10> :VbookmarkSave<CR>
 "nmap <C-F9> :VbookmarkClearAll<CR>
 map <C-g> "+y$
 map <C-y> "+y
-map <C-a> ggVG
+nnoremap <C-F7> :set invpaste paste?<CR>
+set pastetoggle=<C-F7>
+set showmode
 nnoremap <c-]> g<c-]> 
