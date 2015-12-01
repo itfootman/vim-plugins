@@ -310,7 +310,7 @@ endfunction
 function! s:calculateProjectTypes(folderTypes)
   let maskFolderTypes = 0x00
   let retVal = []
-  let finalStrTypes = '' 
+  let finalStrTypes = ''
   let retStatus = s:error_list["OK"]
 
   let lstFolderTypes = split(a:folderTypes, "|")
@@ -369,7 +369,7 @@ function! s:generateTagPrefixNameWithFolder(folderName)
         if i != len(folderNodes)-1
           let retTagNamePrix .= (folderNode . '_')
         else
-          let retTagNamePrix .= folderNode 
+          let retTagNamePrix .= folderNode
         endif
       endif
       let i += 1
@@ -546,17 +546,34 @@ function! s:addExternalFolderWithTypes(externalFolderWithTypes, isForced)
     let strTypes = folderAndStrTypes[1]
   endif
 
-  if isdirectory(folderAndStrTypes[0])
+  let tagFolder = folderAndStrTypes[0]
+  let len = strlen(tagFolder)
+  if strpart(tagFolder, len-1, 1) == '/'
+    let tagFolder = strpart(tagFolder, 0, len-1)
+  endif
+
+  let i = 0
+  for eachFolderWithTypes in g:external_folders
+    let tmpFolderAndTypes = split(eachFolderWithTypes, ':')
+    if tmpFolderAndTypes[0] == tagFolder
+      echo "inini"
+      call remove(g:external_folders, i)
+      call remove(g:tag_externalfolder_tagfile, tagFolder)
+    endif
+    let i += 1
+  endfor
+
+  if isdirectory(tagFolder)
     let maskFolderTypesAndRetValue = s:calculateProjectTypes(strTypes)
     let maskFolderTypes = maskFolderTypesAndRetValue[0]
     let findStrTypes = maskFolderTypesAndRetValue[2]
-    let tagPrefixName = s:generateTagPrefixNameWithFolder(folderAndStrTypes[0])
+    let tagPrefixName = s:generateTagPrefixNameWithFolder(tagFolder)
     let externalTagPathName = g:project_cfg[s:key_tag_path].'/'
                            \ .g:project_cfg[s:key_external_tag_prefix_name]
                            \ .'_external'.s:delimiter.tagPrefixName
-      let retExternalTagNames = s:makeTag(externalTagPathName, folderAndStrTypes[0], maskFolderTypes, a:isForced)
-      call add(g:external_folders, folderAndStrTypes[0].':'.findStrTypes)
-      let g:tag_externalfolder_tagfile[folderAndStrTypes[0]] = retExternalTagNames
+      let retExternalTagNames = s:makeTag(externalTagPathName, tagFolder, maskFolderTypes, a:isForced)
+      call add(g:external_folders, tagFolder .':'.findStrTypes)
+      let g:tag_externalfolder_tagfile[tagFolder] = retExternalTagNames
   endif
 endfunction
 
@@ -630,21 +647,39 @@ function! s:makeProjectTags(...)
   if len(a:000)
     let i = 0
     while i < len(a:000)
-      if match(a:000[i], '\d\+') == -1 ||
-      \  str2nr(a:000[i]) < 0 ||
-      \  str2nr(a:000[i]) >= len(g:tag_folders)
-        let i = i + 1
+      let indexWithTypes = a:000[i]
+      if match(indexWithTypes, '\d\+:\?.*') == -1
+        let i +=  1
         continue
       endif
-      let tagDir = g:tag_folders[str2nr(a:000[i])]
+
+      let indexAndTypes = split(a:000[i], ':')
+      let index = str2nr(indexAndTypes[0])
+      if (index < 0 || index >= len(g:tag_folders))
+        let i += 1
+        continue
+      endif
+
+      let types = ''
+      if len(indexAndTypes) > 1
+        let types = indexAndTypes[1]
+      endif
+
+      let tagDir = g:tag_folders[index]
       if tagDir == "allfolders"
         let isAllFolder = g:TRUE
         break
       else
         if tagDir =~ 'root.*'
           let tagDir = '.'
+          let tagDir .= ':'.types
+        else
+          let folderAndTypes = split(tagDir, ':')
+          let tagDir = folderAndTypes[0]
+          let tagDir .= ':'.types
         endif
         call s:makeFolderTagWithTypes(g:TRUE, tagDir)
+        break
       endif
 
       let i = i + 1
@@ -657,10 +692,6 @@ function! s:makeProjectTags(...)
     for eachFolder in g:tag_folders
       if eachFolder == "allfolders"
         continue
-      endif
-
-      if eachFolder =~ 'root.*'
-        let eachFolder = '.'
       endif
 
       call s:makeFolderTagWithTypes(g:TRUE, eachFolder)
@@ -682,14 +713,31 @@ function! s:makeExternalProjectTags(...)
   if len(a:000)
     let i = 0
     while i < len(a:000)
-      if match(a:000[i], '\d\+') == -1 ||
-      \  str2nr(a:000[i]) < 0 ||
-      \  str2nr(a:000[i]) >= len(g:external_folders)
-        let i = i + 1
+      let indexWithTypes = a:000[i]
+      if match(indexWithTypes, '\d\+:\?.*') == -1
+        let i +=  1
         continue
       endif
 
-      call s:addExternalFolderWithTypes(g:external_folders[str2nr(a:000[i])], g:TRUE)
+      let indexAndTypes = split(a:000[i], ':')
+      let index = str2nr(indexAndTypes[0])
+      if (index < 0 || index >= len(g:external_folders))
+        let i += 1
+        continue
+      endif
+
+      let types = ''
+      let tagDir = ''
+      if len(indexAndTypes) > 1
+        let types = indexAndTypes[1]
+        let tagDir = g:external_folders[index]
+        let tmpFolderAndTypes = split(tagDir, ':')
+        let tagDir = tmpFolderAndTypes[0] . ':'.types
+      else
+        let tagDir = g:external_folders[index]
+      endif
+
+      call s:addExternalFolderWithTypes(tagDir, g:TRUE)
       let i = i + 1
     endwhile
   else
@@ -879,10 +927,10 @@ function! s:checkFolderTypes(folderWithTypes)
   endif
 
   let strTypes = split(folderStrTypes, '|')
-  
+
   for strType in strTypes
     if strType != s:cplusplus &&
-    \  strType != s:java && 
+    \  strType != s:java &&
     \  strType != s:js
       return g:FALSE
     endif
@@ -901,7 +949,7 @@ function! s:addPTagFolders(...)
         if c == 'y'
           call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
         else
-          echomsg ''  
+          echomsg ''
           return
         endif
       else
@@ -923,13 +971,13 @@ function! s:addETagFolders(...)
         echomsg "There are invalid folder types in your input, do you want to add it continue:y/n?."
         let c = nr2char(getchar())
         if c == 'y'
-          call s:addExternalFolderWithTypes(g:FALSE, a:000[i])
+          call s:addExternalFolderWithTypes(a:000[i], g:FALSE)
         else
-          echomsg ''  
+          echomsg ''
           return
         endif
       else
-        call s:makeFolderTagWithTypes(g:FALSE, a:000[i])
+        call s:addExternalFolderWithTypes(a:000[i], g:FALSE)
       endif
       let i += 1
     endwhile
@@ -961,7 +1009,7 @@ function! s:delPTagWithKeyAndType(folderIndex, key, type)
     let i+= 1
   endfor
 
-  if !empty(g:tag_folder_tagfile_map[a:key]) 
+  if !empty(g:tag_folder_tagfile_map[a:key])
     let tagFolder = g:tag_folders[a:folderIndex]
       let folderWithTypes = split(tagFolder, ':')
       if len(folderWithTypes) > 1
@@ -974,7 +1022,7 @@ function! s:delPTagWithKeyAndType(folderIndex, key, type)
             break
           endif
           let i+= 1
-        endfor 
+        endfor
 
         for folderType in folderTypes
           let outFolderTypes .=  folderType . '|'
@@ -1046,18 +1094,18 @@ function! s:delPTagFolders(...)
             \ type != s:js
               continue
             endif
-            
+
             let outFolderTypes = ''
             if type == s:cplusplus
-              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:plusplus) 
+              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:plusplus)
             endif
 
             if type == s:java
-              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:java) 
+              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:java)
             endif
 
             if type == s:js
-              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:js) 
+              let outFolderTypes =  s:delPTagWithKeyAndType(index, folder, s:js)
             endif
 
             if strlen(outFolderTypes) > 0
@@ -1076,7 +1124,7 @@ function! s:delPTagFolders(...)
       endif
       let i+= 1
     endwhile
-    
+
     for tmpfolderWithTypes in folderToRemove
       let j = 0
       for origin in g:tag_folders
@@ -1127,18 +1175,18 @@ function! s:delETagFolders(...)
             \ type != s:js
               continue
             endif
-            
+
             let outFolderTypes = ''
             if type == s:cplusplus
-              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:plusplus) 
+              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:plusplus)
             endif
 
             if type == s:java
-              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:java) 
+              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:java)
             endif
 
             if type == s:js
-              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:js) 
+              let outFolderTypes = s:delETagWithKeyAndType(externalFolder, s:js)
             endif
 
             if strlen(outFolderTypes) > 0
