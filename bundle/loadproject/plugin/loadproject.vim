@@ -437,14 +437,14 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
       if a:isForced == 0
         if !s:listHasValue(g:tag_folders,tmpIndex)
           let g:tag_folder_tagfile_map['root'] = retFolderTagNames
-          call add(g:tag_folders, 'root'.finalStrTypes)
+          call add(g:tag_folders, 'root:'.finalStrTypes)
         endif
       endif
     else
       if a:isForced == 0
         if !s:listHasValue(g:tag_folders, "root")
           let g:tag_folder_tagfile_map['root'] = retFolderTagNames
-          call add(g:tag_folders, "root".findStrTypes)
+          call add(g:tag_folders, "root:".finalStrTypes)
         endif
       endif
     endif
