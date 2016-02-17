@@ -66,7 +66,7 @@ tagPrefixName=tags
 # Using 'tagExcludeFolders' to set the excluded folders.
 # Default mode is 'root', 'root' means import all folders' tags of project.
 tagImportMode=include
-tagIncludeFolders=gaia,sdk,pdk
+tagIncludeFolders=aliyunos:js|cplusplus,yocto-layers/build/arago-tmp-external-linaro-toolchain/work/cortexa15t2hf-vfp-neon-3.14-oe-linux-gnueabi/glib-2.0/1_2.38.2-r0/glib-2.38.2
 
 # The path of saving bookmarks. '.' means to use project root path.
 # And it is the default value.
@@ -85,13 +85,13 @@ sessionName=session
 projectCfgFolder=.vimproject
 
 # The include paths of project.
-projectIncludes=.,sdk/include,gaia/base/include,out/target/common/R_gaia
+projectIncludes=.,bin
 
 # The external folders.
-externalFolders=/usr/include
+#externalFolders=/usr/include
 
 # The include paths of external folders.
-externalIncludes=/usr/include
+#externalIncludes=/usr/include
 
 # The external folders' tag prefix name.
 # Default value is 'tags'
