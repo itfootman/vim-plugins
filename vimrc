@@ -57,7 +57,7 @@ set runtimepath^=~/.vim/bundle/vim-colors-solarized,
 
 if !has("gui_running")
   if $TERM_NAME  == "konsole"
-    s:setSolarized()
+    call <SID>setSolarized()
   elseif $TERM_NAME == "gnome-terminal"
     colorscheme eclipse
   elseif $TERM_NAME == "lilyterm"
@@ -66,8 +66,7 @@ if !has("gui_running")
     if $MY_CLIENT == "ipad"
       call <SID>setLily()
     else
-      ""call <sid>setSolarized()
-      call <SID>setLily()
+      call <SID>setSolarized()
     endif
 endif
 
