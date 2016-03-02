@@ -84,9 +84,9 @@ function! s:loadProjectCfg()
     if !isdirectory(pathStep)
       return s:error_list['INVALID_PATH']
     elseif filereadable(pathStep.'/'.projectCfgName)
-      if len(pathStep) <= len($HOME)
-        continue
-      endif
+  ""    if len(pathStep) <= len($HOME)
+  ""      continue
+  ""    endif
       let foundProjecConfig = 1
       let g:project_cfg[s:key_project_root] = pathStep
       let configItems = readfile(pathStep.'/'.projectCfgName, '', 400)

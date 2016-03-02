@@ -106,13 +106,16 @@ function gvim () { (/usr/bin/gvim "$@" > /dev/null 2>/dev/null &) }
 
 #export ANDROID_SDK=/home/$HOME/develop/android-ndk-sdk/android-new-linux
 #export PATH=$ANDROID_SDK/platform-tools:$ANDROID_SDK/tools:$PATH
-export PATH=$HOME/program/bcompare/bin:$PATH
+#export PATH=$HOME/program/bcompare/bin:$PATH
 
 # An easy method to get terminal name.
 export TERM_NAME=`ps -p $(ps -p $$ -o ppid=) -o args=`
 #export SCREEN_COLS=`tput cols`
 #Load self defined commands.
-. $HOME/program/bin/command.sh
+SELF_COMMAND=$HOME/program/bin/command.sh
+if [ -e "$SELF_COMMAND" ]; then
+  . $SELF_COMMAND
+fi
 #function getTerminal() {
 #   local terminalName=
 #   local terminalIndex=
