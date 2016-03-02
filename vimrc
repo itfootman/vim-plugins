@@ -6,7 +6,7 @@ set backspace=2
 set nocompatible
 set number
 filetype on
-filetype plugin indent on 
+filetype plugin indent on
 set nocp
 set history=1000
 "set autoindent
@@ -31,6 +31,20 @@ set langmenu=zh_CN,utf-8
 syntax enable
 syntax on
 
+function! <SID>setLily()
+  set t_Co=256
+  set background=dark
+  colorscheme wombat256mod
+endfunction
+
+function! <SID>setSolarized()
+  set background=dark
+  set t_Co=16
+  let g:solarized_termcolors=16
+  let g:solarized_termtrans = 1
+  colorscheme solarized
+endfunction
+
 let g:screen_col = str2nr(system('tput cols'))
 set runtimepath^=~/.vim/bundle/vim-colors-solarized,
                \~/.vim/bundle/loadproject,
@@ -43,28 +57,25 @@ set runtimepath^=~/.vim/bundle/vim-colors-solarized,
 
 if !has("gui_running")
   if $TERM_NAME  == "konsole"
-    set background=dark
-    set t_Co=16
-    let g:solarized_termcolors=16
-    let g:solarized_termtrans = 1
-    colorscheme solarized
+    s:setSolarized()
   elseif $TERM_NAME == "gnome-terminal"
     colorscheme eclipse
   elseif $TERM_NAME == "lilyterm"
-    set t_Co=256
-    set background=dark
-    colorscheme wombat256mod
+    call <SID>setLily()
   else
-    set t_Co=256
-    set background=dark
-    colorscheme wombat256mod
+    if $MY_CLIENT == "ipad"
+      call <SID>setLily()
+    else
+      ""call <sid>setSolarized()
+      call <SID>setLily()
+    endif
 endif
- 
+
 "  set background=light
-"  colorscheme seoul256 
+"  colorscheme seoul256
 else
  colorscheme solarized
- "colorscheme desertEx 
+ "colorscheme desertEx
 endif
 
 let g:NERDTree_title='NERD Tree'
@@ -106,14 +117,14 @@ let g:miniBufExplMapWindowNavVim = 1 " 通过h,j,k,l切换窗口
 let g:miniBufExplMapWindowNavArrows = 1 " 通过方向键切换窗口
 let g:bufExplorerSortBy='mru'
 
-let g:CommandTMaxFiles=100000
+let g:CommandTMaxFiles=400000
 
 ""let Tlist_Show_One_File=1 " 仅显示当前文件的tags目录
 ""let Tlist_Exit_OnlyWindow=1 " 当仅剩下taglist窗口的时候启动关闭
 ""let Tlist_Inc_Winwidth=0
 ""let Tlist_Use_Right_Window=1
 "let Tlist_File_Fold_Auto_Close=1
- 
+
 
 "autocmd VimLeave * mks! ~/.vim/vimsession.vim
 "match DiffAdd '\%>80v.*'
@@ -165,8 +176,8 @@ endfunction
 "Open file in project
 "The value will be set in 'loadproject.vim'
 let g:project_root = ''
-function! <SID>OpenFileInProject()            
-    let openCmd = ":Leaderf " . g:project_root 
+function! <SID>OpenFileInProject()
+    let openCmd = ":Leaderf " . g:project_root
     echo openCmd
     execute openCmd
 endfunction
@@ -210,4 +221,4 @@ map <C-y> "+y
 nnoremap <C-F7> :set invpaste paste?<CR>
 set pastetoggle=<C-F7>
 set showmode
-nnoremap <c-]> g<c-]> 
+nnoremap <c-]> g<c-]>
