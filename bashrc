@@ -114,7 +114,10 @@ if [ -z "$TERM_NAME" ]; then
 fi
 #export SCREEN_COLS=`tput cols`
 #Load self defined commands.
-. $HOME/program/bin/command.sh
+SELF_COMMAND=$HOME/program/bin/command.sh
+if [ -e "$SELF_COMMAND" ]; then
+      . $SELF_COMMAND
+fi
 #function getTerminal() {
 #   local terminalName=
 #   local terminalIndex=
