@@ -106,9 +106,10 @@ function gvim () { (/usr/bin/gvim "$@" > /dev/null 2>/dev/null &) }
 
 #export ANDROID_SDK=/home/$HOME/develop/android-ndk-sdk/android-new-linux
 #export PATH=$ANDROID_SDK/platform-tools:$ANDROID_SDK/tools:$PATH
-export PATH=$HOME/program/bcompare/bin:$PATH
+#export PATH=$HOME/program/bcompare/bin:$PATH
 
 # An easy method to get terminal name.
+
 if [ -z "$TERM_NAME" ]; then
   export TERM_NAME=`ps -p $(ps -p $$ -o ppid=) -o args=`
 fi
@@ -116,7 +117,7 @@ fi
 #Load self defined commands.
 SELF_COMMAND=$HOME/program/bin/command.sh
 if [ -e "$SELF_COMMAND" ]; then
-      . $SELF_COMMAND
+  . $SELF_COMMAND
 fi
 #function getTerminal() {
 #   local terminalName=
@@ -142,4 +143,5 @@ alias pd=pushd
 alias gi=gvim
 alias dr='dirs -v'
 
+complete -W "$(echo $(grep '^Host ' ~/.ssh/config  | sort -u | sed 's/^xssh //'))" xssh
 #. /usr/share/doc/cdargs/examples/cdargs-bash.sh
