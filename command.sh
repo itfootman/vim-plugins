@@ -27,7 +27,8 @@ function xsh()
         return
     fi
 
-    MY_TERM_NAME=`ps -p $(ps -p $$ -o ppid=) -o args=`
+    #MY_TERM_NAME=`ps -p $(ps -p $$ -o ppid=) -o args=`
+    MY_TERM_NAME="`ps -p $(ps -p $$ -o ppid=) -o args= | sed 's:\/:_:g' | sed 's:\s:_:g'`"
     CMD="bash -c -l \"export TERM_NAME=$MY_TERM_NAME;bash\""
     ssh $1 -t $CMD
 }
