@@ -20,7 +20,7 @@ function addRoute() {
   ip route add $IP dev tun0
 }
 
-function xssh()
+function xsh()
 {
     if [ -z "$1" ]; then
         echo "usage:xssh alibuild2"
