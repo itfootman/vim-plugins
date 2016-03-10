@@ -143,5 +143,5 @@ alias pd=pushd
 alias gi=gvim
 alias dr='dirs -v'
 
-complete -W "$(echo $(grep '^Host ' ~/.ssh/config  | sort -u | sed 's/^xssh //'))" xssh
+complete -W "$(echo $(grep '^Host ' ~/.ssh/config  | sort -u | sed 's/^xsh //'))" xsh
 #. /usr/share/doc/cdargs/examples/cdargs-bash.sh
