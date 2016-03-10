@@ -62,12 +62,10 @@ if !has("gui_running")
     colorscheme eclipse
   elseif $TERM_NAME == "lilyterm"
     call <SID>setLily()
+  elseif $TERM_NAME =~ ".*terminator$"
+    call <SID>setSolarized()
   else
-    if $MY_CLIENT == "ipad"
       call <SID>setLily()
-    else
-      call <SID>setSolarized()
-    endif
 endif
 
 "  set background=light
@@ -78,7 +76,7 @@ else
 endif
 
 let g:NERDTree_title='NERD Tree'
-let g:NERDTreeWinSize = float2nr(0.37 * g:screen_col)
+let g:NERDTreeWinSize = float2nr(0.7 * g:screen_col)
 function! NERDTree_Start()
     exec 'NERDTree'
 endfunction
