@@ -556,7 +556,6 @@ function! s:addExternalFolderWithTypes(externalFolderWithTypes, isForced)
   for eachFolderWithTypes in g:external_folders
     let tmpFolderAndTypes = split(eachFolderWithTypes, ':')
     if tmpFolderAndTypes[0] == tagFolder
-      echo "inini"
       call remove(g:external_folders, i)
       call remove(g:tag_externalfolder_tagfile, tagFolder)
     endif
@@ -692,6 +691,10 @@ function! s:makeProjectTags(...)
     for eachFolder in g:tag_folders
       if eachFolder == "allfolders"
         continue
+      endif
+
+      if eachFolder =~ 'root.*'
+        let eachFolder = substitute(eachFolder, 'root', '.', '')
       endif
 
       call s:makeFolderTagWithTypes(g:TRUE, eachFolder)

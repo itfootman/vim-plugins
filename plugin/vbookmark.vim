@@ -20,6 +20,8 @@ if exists('colors_name')
     highlight custom ctermfg=100 ctermbg=232
   elseif colors_name == "solarized"
     highlight custom ctermfg=100 ctermbg=0
+  elseif colors_name == "seoul256"
+    highlight custom ctermfg=100 ctermbg=237
   else
     highlight custom ctermfg=100 ctermbg=232
   endif

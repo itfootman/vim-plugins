@@ -91,6 +91,7 @@ endif
 
 let s:background  = &background
 let s:colors_name = get(g:, 'colors_name', '')
+let colors_name = 'seoul256'
 
 silent! unlet s:style s:seoul256_background
 
