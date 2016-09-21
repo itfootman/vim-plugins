@@ -435,7 +435,7 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
     let retFolderTagNames = s:makeTag(tagPathNameAll, g:project_cfg[s:key_project_root], folderMaskTypes, a:isForced)
     if len(folderAndStrTypes) > 1
       if a:isForced == 0
-        if !s:listHasValue(g:tag_folders,tmpIndex)
+        if !s:listHasValue(g:tag_folders,'root')
           let g:tag_folder_tagfile_map['root'] = retFolderTagNames
           call add(g:tag_folders, 'root:'.finalStrTypes)
         endif
