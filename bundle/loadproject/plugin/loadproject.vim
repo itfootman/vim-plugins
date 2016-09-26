@@ -457,8 +457,10 @@ function! s:makeFolderTagWithTypes(isForced, folderWithTypes)
       let tagAppendixName = s:generateTagPrefixNameWithFolder(tagFolder)
       let tagPathAndName = tagPath.'/'. tagName . s:delimiter . tagAppendixName
       let retFolderTagNames = s:makeTag(tagPathAndName, fullTagFolderPath, folderMaskTypes, a:isForced)
-      call add(g:tag_folders, tagFolder.':'.finalStrTypes)
-      let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
+      if a:isForced == g:FALSE
+         call add(g:tag_folders, tagFolder.':'.finalStrTypes)
+         let g:tag_folder_tagfile_map[tagFolder] = retFolderTagNames
+      endif 
     endif
   endif
 
