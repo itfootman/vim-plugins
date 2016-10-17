@@ -8,6 +8,10 @@ function cgrep()
     find . -name .repo -prune -o -name .git -prune -o -type f \( -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 grep --color -n "$@"
 }
 
+function jsgrep() {
+    find . -name .repo -prune -o -name .git -prune -o  -type f -name "*\.js" -print0 | xargs -0 grep --color -n "$@"
+}
+
 function resgrep()
 {
     for dir in `find . -name .repo -prune -o -name .git -prune -o -name res -type d`; do find $dir -type f -name '*\.xml' -print0 | xargs -0 grep --color -n "$@"; done;
