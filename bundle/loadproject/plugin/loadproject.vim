@@ -178,7 +178,7 @@ function! s:makeTag(path, project, projectTypes, isForced)
   let ctagCommandJs = ''
   let commandCplus = " --file-scope=yes
   \                    --fields=+iaS --extra=+q
-  \                    --langmap=C++:.C.h.c.cpp.hpp.cc
+  \                    --langmap=C++:.C.h.c.cpp.hpp.cc.cu
   \                    --languages=c,c++ --links=yes
   \                    --c-kinds=+p --c++-kinds=+p -R "
 
