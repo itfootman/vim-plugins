@@ -59,7 +59,8 @@ if !has("gui_running")
   if $TERM_NAME  == "konsole"
     call <SID>setSolarized()
   elseif $TERM_NAME == "gnome-terminal"
-    colorscheme eclipse
+    call <SID>setLily()
+    ""colorscheme eclipse
   elseif $TERM_NAME == "lilyterm"
     call <SID>setLily()
   elseif $TERM_NAME =~ ".*terminator$"

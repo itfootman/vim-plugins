@@ -143,5 +143,7 @@ alias pd=pushd
 alias gi=gvim
 alias dr='dirs -v'
 
+if [ -e '~/.ssh/config' ]; then
 complete -W "$(echo $(grep '^Host ' ~/.ssh/config  | sort -u | sed 's/^xsh //'))" xsh
+fi
 #. /usr/share/doc/cdargs/examples/cdargs-bash.sh
